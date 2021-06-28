@@ -25,6 +25,8 @@
   - [서버 만들기](#서버-만들기)
   - [GET](#get)
   - [Middleware](#middleware)
+  - [Third party middleware](#third-party-middleware)
+    - [Morgan](#morgan)
 
 
 # Requirements
@@ -37,7 +39,7 @@
 
 # Set Up
 ## NodeJS
-- [NodeJS]('https://nodejs.org/en/') 설치
+- [NodeJS](https://nodejs.org/en/) 설치
 
 ## 프로젝트 시작하기
 - 프로젝트 폴더를 만들고 폴더안으로 들어간다.
@@ -69,8 +71,8 @@
 - node_modueles폴더와 package-lock.json파일이 생성된다.
   
 #### node_modules
+- npm으로 새로운 패키지를 설치하게 되면 node_modules에는 패키지 파일들이 추가 되고, package.json에는 패키지 정보가 추가 된다.
 - package.json에 있는 패키지 뿐만 아니라 package.json에 있는 패키지들이 의존하고 있는 패키지 전부를 포함하고 있다.
-- npm으로 새로운 패키지를 설치하게 되면 package.json과 node_modules에 추가된다.
 
 ## Babel
 - 최신 자바스크립트 문법을 브라우저가 이해할 수 있는 문법으로 변환해주는 트랜스파일러이다.
@@ -90,7 +92,7 @@
         }
     ```
 - 터미널 창에 `npm install @babel/preset-env --save-dev` 입력
-- package.json파일에서 babel로 컴파일하는 scripts를 작성한다.
+- **package.json**파일에서 babel로 컴파일하는 **scripts**를 작성한다.
     ```json
         {
             "scripts": {
@@ -142,26 +144,27 @@
 ```
 
 ## GET
-- get은 http 메서드이고, 사용자가 url에 데이터를 담아 서버에게 요청하는 것이다.
-- 서버는 get 요청이 오면 `.get()`메서드로 응답을 해준다.
-- .get(path, callback);
+- GET은 http 메서드이고, 사용자가 url에 데이터를 담아 서버에게 요청하는 것이다.
+- 브라우저 주소창에 url을 치고 들어가는 것은 브라우저가 서버에게 페이지를 request 하는 것과 같다. 누군가가 해당 경로(**path**)로 request를 보내면 서버는 `.get(path, callback)`메서드의 콜백함수를 실행시키고, 콜백함수는 return으로 응답을 해줘야 한다.
 ```js
 
-    // 사용자에게 해당 url에 대한 요청이 들어오면 콜백함수를 실행한다.
+    // '/' = root 경로
     app.get('/', (req, res) => {
         return res.end();
 
         // res 객체에는 여러가지 메소드가 있다.
     });
     // get 메소드가 실행되면 콜백함수는 express로 부터 req, res 인자를 전달 받는다.
-    // 브라우저에서 request를 받으면 response를 return을 해주어 응답해준다.
+    // 브라우저에서 request를 받으면 response를 return 해주어 응답해준다.
 
 ```
-- **`Request Object`**: [Request(요청)]('https://expressjs.com/ko/4x/api.html#req')에 대한 객체
-- **`Response Object`**: [Response(응답)]('https://expressjs.com/ko/4x/api.html#res')에 대한 객체
+- **`Request Object`**: [Request(요청)](https://expressjs.com/ko/4x/api.html#req)에 대한 정보가 담긴 객체
+- **`Response Object`**: [Response(응답)](https://expressjs.com/ko/4x/api.html#res)에 대한 정보가 담긴 객체
+  
+> get 메소드의 path가 **Router**이고, callback이 **Controller**라고 생각하면 된다.
 
 ## Middleware
-- 사용자의 요청과 서버의 응답 사이에 존재하는 소프트웽어이다.
+- 사용자의 요청과 서버의 응답 사이에 존재하는 소프트웨어이다.
 - handler는 controller이고, 모든 controller가 middleware가 될 수 있다.
 - controller에는 req, res 말고 하나의 인자가 더 있는데 next이다.
 - next() 함수를 호출하면 해당 controller의 다음 controller가 실행된다.
@@ -185,7 +188,7 @@
     app.get('/', middleware, handleHome)
 
 ```
-- 위 코드처럼 get 메소드안에 **middleware**를 넣으면 그 메소드에만 **middleware**가 동작한다.
+- 위 코드처럼 get 메소드안에 **middleware**를 넣으면 그 요청에만 **middleware**가 동작한다.
 - 여러개의 get 메소드에 대해 **middleware**를 동작 시키고 싶으면 `global middleware`를 사용한다.
 - `.use()` 메소드
     ```js
@@ -200,10 +203,27 @@
         }
 
         // 위에서 아래로 실행되기 때문에 middleware는 아래에 있는 controller에게만 적용된다.
+        // 여러 middleware를 같이 사용할 수 있다. 
         app.use(Middleware)
         app.get('/', handleHome)
         app.get('/login', handleLogin)
 
     ```
 
+## Third party middleware
+- express가 제공하는 built-in middleware가 아닌 추가로 설치하여 사용해야 하는 미들웨어이다.
+
+### Morgan
+- 로그 관리를 위한 미들웨어
+- `npm install morgan` 설치
+```js
+
+  import morgan from 'morgan';
+
+  // morgan은 여러가지 옵션이 있다.
+  const logger = morgan('dev');
+
+  app.use(logger);
+
+```
     
