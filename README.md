@@ -27,6 +27,7 @@
   - [Middleware](#middleware)
   - [Third party middleware](#third-party-middleware)
     - [Morgan](#morgan)
+- [Router](#router)
 
 
 # Requirements
@@ -227,3 +228,53 @@
 
 ```
     
+# Router
+- 사용자의 요청 경로(path)를 보고 이 요청을 처리할 수 있는 곳(contorller)으로 기능을 전달해주는 역할
+- 어플리케이션 엔드 포인트(URI)의 정의, URI가 사용자 요청에 응답하는 방식을 말한다.
+- 카테고리 별로 경로를 그룹화한다.</br></br>
+- **`express.Router()`** 사용
+```js
+
+  const globalRouter = express.Router();
+  const userRouter = express.Router();
+
+  const handleHome = (req, res) => res.send('Home')
+  const handleEditUser = (req, res) => res.send('Edit User')
+
+  app.use('/', globalRotuer);
+  app.use('/users', userRouter);
+
+  globalRouter.get('/', handleHome)
+  userRouter.get('/edit', handleEditUser)
+
+```
+ - - `.use()`를 사용해 각 카테고리별 대표 경로를 정의하고, 콜백함수로 연결시켜줄 Router를 적용해준다.
+    - 사용자가 어떠한 url로 접근 시 그에 해당하는 router로 연결해주고 그 router에서 그 url에 해당하는 controller를 찾아줄것이다.
+    - 위의 코드로 예를 들면 사용자가 /users/edit라는 url로 접근한다고 했을 때
+    - 먼저 서버는 /users라는 url이 들어오면 app.use의 userRouter를 실행시킨다. 그 다음 userRouter에서 /edit와 일치하는 handleEditUser를 실행시킨다.
+
+- **controllers**와 **routers** 폴더를 만들어서 router 별로 분리하기
+  - 각 카테고리 별로 router 파일과 controller 파일을 만든다.
+    ```js
+      
+      // src/routers/globalRouter.js
+
+      import express from 'express';
+
+      const globalRouter = express.Router();
+
+      globalRouter.get('/', )
+
+      export default globalRouter;
+
+    ```
+  - server.js에 router파일을 import 해서 사용한다.  
+    ```js
+
+      // src/server.js
+
+      import globalRouter from './routers/globalRouter';
+
+      app.use('/', globalRouter);
+
+    ```
