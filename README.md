@@ -28,6 +28,17 @@
   - [Third party middleware](#third-party-middleware)
     - [Morgan](#morgan)
 - [Router](#router)
+  - [Dynamic Routing(동적 라우팅)](#dynamic-routing동적-라우팅)
+    - [동적 URL](#동적-url)
+- [Controller](#controller)
+- [Template](#template)
+  - [사용하기](#사용하기)
+  - [문법](#문법)
+    - [javascript 사용](#javascript-사용)
+      - [javascript 문법 사용](#javascript-문법-사용)
+      - [express 변수 사용](#express-변수-사용)
+    - [Partials](#partials)
+    - [Layout](#layout)
 
 
 # Requirements
@@ -48,12 +59,12 @@
   - package.json 문서는 어느 곳에서도 동일한 개발환경을 구축할 수 있게 해준다.
 
 ### git 저장소 생성
-- 터미널 창에 `git init` 입력
+- 터미널 창에 `git init` 설치
 - github에서 repository 생성
-- 터미널 창에 `git remote add [github repository url]` 입력
+- 터미널 창에 `git remote add [github repository url]` 설치
 
 ### package.json 파일 생성
-- 터미널 창에 `npm init` 입력
+- 터미널 창에 `npm init` 설치
 - 질문의 답을 완료하면 파일 생성
     - package name : 패키지의 이름이다.
     - version : 패키지의 버전이다.
@@ -68,7 +79,7 @@
 - NodeJS를 사용하여 쉽게 서버를 구성할 수 있게 만든 클래스와 라이브러리의 집합체
 
 ### Express install
-- 터미널 창에 `npm install express` 입력
+- 터미널 창에 `npm install express` 설치
 - node_modueles폴더와 package-lock.json파일이 생성된다.
   
 #### node_modules
@@ -80,7 +91,7 @@
 
 ### babel install
 - NodeJS에서 사용가능한 babel을 설치한다.
-- 터미널 창에 `npm install --save-dev @babel/core` 입력
+- 터미널 창에 `npm install --save-dev @babel/core` 설치
   - `--save-dev` 명령어를 입력하면 package.json 파일의 `devDependencies`에 저장된다.
   - `dependencies`는 프로젝트에 필요한 패키지이고, `devDependencies`는 개발자에게 필요한 패키지이다.
 - `babel.config.json` 파일 생성
@@ -92,7 +103,7 @@
             "presets": ["@babel/preset-env"]
         }
     ```
-- 터미널 창에 `npm install @babel/preset-env --save-dev` 입력
+- 터미널 창에 `npm install @babel/preset-env --save-dev` 설치
 - **package.json**파일에서 babel로 컴파일하는 **scripts**를 작성한다.
     ```json
         {
@@ -101,14 +112,14 @@
             }
         }
     ```
-- 터미널 창에 `npm install @babel/core @babel/node --save-dev` 입력해서 설치해준다.
+- 터미널 창에 `npm install @babel/core @babel/node --save-dev` 설치
 - `@babel/node`는 코드의 트랜스파일과 실행을 한 번에 할 수 있게 해주는 패키지이다.
 
 ## Nodemon
 - 서버 파일의 변경이 감지되면 서버를 재시작 시켜주는 패키지이다.
 
 ### nodemon install
-- 터미널 창에 `npm install nodemon --save-dev` 입력
+- 터미널 창에 `npm install nodemon --save-dev` 설치
 - **package.json**파일의 **scripts**를 수정해준다.
     ```json
         {
@@ -235,16 +246,16 @@
 - **`express.Router()`** 사용
 ```js
 
-  const globalRouter = express.Router();
+  const Router = express.Router();
   const userRouter = express.Router();
 
   const handleHome = (req, res) => res.send('Home')
   const handleEditUser = (req, res) => res.send('Edit User')
 
-  app.use('/', globalRotuer);
+  app.use('/', Rotuer);
   app.use('/users', userRouter);
 
-  globalRouter.get('/', handleHome)
+  Router.get('/', handleHome)
   userRouter.get('/edit', handleEditUser)
 
 ```
@@ -257,15 +268,15 @@
   - 각 카테고리 별로 router 파일과 controller 파일을 만든다.
     ```js
       
-      // src/routers/globalRouter.js
+      // src/routers/Router.js
 
       import express from 'express';
 
-      const globalRouter = express.Router();
+      const Router = express.Router();
 
-      globalRouter.get('/', )
+      Router.get('/', )
 
-      export default globalRouter;
+      export default Router;
 
     ```
   - server.js에 router파일을 import 해서 사용한다.  
@@ -273,8 +284,192 @@
 
       // src/server.js
 
-      import globalRouter from './routers/globalRouter';
+      import Router from './routers/Router';
 
-      app.use('/', globalRouter);
+      app.use('/', Router);
 
     ```
+
+## Dynamic Routing(동적 라우팅)
+- Routes의 경로에 특정 값을 넣어 해당 페이지로 이동할 수 있게 하는 것을 말한다.
+
+### 동적 URL
+- url에 `:(콜론)`을 사용해 변수로 만들어 주고 사용자가 원하는 값을 넣고 요청하면 데이터를 응답한다.
+```js
+
+  // src/routers/userRouter.js
+
+  import express from 'express';
+
+  const userRouter = express.Router();
+
+  // 해당 router는 /users/:id 와 같다
+  userRouter.get('/:id', user);
+
+  export default userRouter;
+
+```
+- 예를 들어 브라우저에서 /users/234545 라고 요청이 들어오면 **234545** 이 부분이 `:id`로 인식이 되는  것이고 그에 해당하는 페이지를 응답한다.
+- `:id`로 요청 받은 값은 `req.params`로 가져올 수 있다.
+  - `{ id: 234545 }` 출력
+
+> 정규표현식을 사용해서 변수에 원하늩 타입만 받을 수 있다.</br>
+> `("/:id(\\d+)", )` 숫자 타입의 요청만 받겠다는 것이다.
+
+
+
+# Controller
+- 어플리케이션의 로직을 담당
+- 사용자 요청이 들어왔을 때 그에 해당 하는 데이터를 응답한다.
+- `controllers` 폴더를 만들어 controller 파일들을 저장한다.
+```js
+
+  // src/controllers/homeController.js
+
+  export const Home = (req, res) => res.send('Home')
+
+```
+- default로 export를 하게 되면 하나의 모듈만 할 수 있으므로 각 controller를 export 해준다.
+```js
+  
+  // src/routers/Router.js
+
+  import { Home } from '../controllers/homeController';
+
+  const Router = express.Router();
+
+  Router.get('/', Home);
+
+```
+- 필요한 모듈을 import 해서 사용한다.
+
+# Template
+- 템플릿 엔진이란 템플릿을 읽어 엔진의 문법과 설정에 따라서 파일을 HTML 형식으로 변환시키는 모듈이다.
+- 엔진 종류로는 pug과 ejs가 있다.
+- `npm install pug` 설치
+- express 설정을 해주어야한다.
+```js
+
+  // scr/server.js
+
+  // view engine으로 pug을 사용하겠다고 알려주는 것이다.
+  app.set('view engine', 'pug');
+
+```
+
+## 사용하기
+- express는 기본적으로 process.cwd() + /views 폴더에서 템플릿을 찾는다
+  - process.cwd() = node.js를 실행하는 파일(package.json)이 있는 폴더  
+- /views 폴더를 만들고, 폴더 안에 pug 파일을 작성한다.
+- 다른 폴더에 views를 생성하면 설정을 바꿔주어야 한다.
+```js
+
+  app.set('views', process.cwd() + '/src/views')
+
+```
+- controller에서 `.render()` 메소드를 이용해 불러온다.
+```js
+
+  // src/controllers/homeController.js
+
+  export const Home = (req, res) => res.render('home');
+
+```
+
+## 문법
+- 하위 태그는 공백으로 구분한다.
+```pug
+
+   //- src/views/home.pug
+
+  doctype html
+  html(lang='ko')
+    head
+      title Home
+    body
+      h1 Home
+      footer &copy; 2021 
+```
+
+### javascript 사용
+- `#{}`안에 변수나 javascript를 사용한다. 
+  
+#### javascript 문법 사용
+```pug
+
+  footer &copy; #{new Date.now().getFullYear()} Wetube
+
+```
+
+#### express 변수 사용
+- controller에서 template으로 변수 넘겨주기
+- `.render()`의 두번째 인자로 객체를 넘겨준다.
+```js
+
+  // src/controller/homeController.js
+
+  export const home = (req, res) => res.render('home', { pageTitle: 'Home' })
+
+```
+- pug에서 변수 받아서 사용하기
+```pug
+
+  //- src/views/home.pug
+  
+  head
+      title #{pageTitle}
+
+```
+
+### Partials
+- header나 footer같이 여러 페이지에 중복되는 코드를 재사용할 수 있게 해주는 것
+- partials 폴더 생성 후 폴더안에 필요한 파일을 작성한다.
+```pug
+
+  //- src/views/partials/footer.pug
+
+  footer &copy; #{new Date.now().getFullYear()} 
+
+```
+- partials가 필요한 pug 파일에서 `include`로 사용한다.
+```pug
+
+  //- src/views/home.pug
+
+  body
+    include partials/footer.pug
+
+```
+
+### Layout
+- 여러 페이지에서 반복되는 layout 코드를 한 파일에 작성해 다른 페이지에서 확장해서 사용할 수 있다.
+- block 키워드로 파일마다 다른 내용을 넣을 수 있게 만들어준다.
+  - [block blockName]
+```pug
+
+  //- src/views/base.pug
+
+   doctype html
+  html(lang='ko')
+    head
+      title Home
+    body
+      //- base.pug 파일을 확장해서 사용하는 파일들이 서로 다른 코드를 넣을 수 있게 block을 만든 것
+      block content
+
+      include partials/footer.pug
+      
+
+```
+- `extends` 키워드로 사용
+```pug
+
+  //- scr/views/home.pug
+
+  extends base.pug
+
+  //- 확장한 base.pug의 content block에 코드를 넣는다.
+  block content
+    h1 Home
+
+```
