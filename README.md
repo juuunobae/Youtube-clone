@@ -24,6 +24,9 @@
 - [Express Server](#express-server)
   - [서버 만들기](#서버-만들기)
   - [GET](#get)
+  - [POST](#post)
+    - [.urlencoded](#urlencoded)
+  - [route](#route)
   - [Middleware](#middleware)
   - [Third party middleware](#third-party-middleware)
     - [Morgan](#morgan)
@@ -42,6 +45,7 @@
       - [express 변수 사용](#express-변수-사용)
     - [Partials](#partials)
     - [Layout](#layout)
+- [Database](#database)
 
 
 # Requirements
@@ -159,8 +163,8 @@
 ```
 
 ## GET
-- GET은 http 메서드이고, 사용자가 url에 데이터를 담아 서버에게 요청하는 것이다.
-- 브라우저 주소창에 url을 치고 들어가는 것은 브라우저가 서버에게 페이지를 request 하는 것과 같다. 누군가가 해당 경로(**path**)로 request를 보내면 서버는 `.get(path, callback)`메서드의 콜백함수를 실행시키고, 콜백함수는 return으로 응답을 해줘야 한다.
+- GET은 http 메소드이고, 사용자가 url에 데이터를 담아 서버에게 요청하는 것이다.
+- 브라우저 주소창에 url을 치고 들어가는 것은 브라우저가 서버에게 페이지와 데이터를 request 하는 것과 같다. 누군가가 해당 경로(**path**)로 get request를 보내면 서버는 `.get(path, callback)`메소드의 콜백함수를 실행시키고, 콜백함수는 return으로 응답을 해줘야 한다.
 ```js
 
     // '/' = root 경로
@@ -177,6 +181,55 @@
 - **`Response Object`**: [Response(응답)](https://expressjs.com/ko/4x/api.html#res)에 대한 정보가 담긴 객체
   
 > get 메소드의 path가 **Router**이고, callback이 **Controller**라고 생각하면 된다.
+
+## POST
+- POST는 http 메소드이고, 사용자가 파일을 보내거나 database에 있는 값을 바꾸는 무언가를 보낼 때 사용한다.
+- Login할 때도 사용
+
+```pug
+
+  //- 
+
+  form(method='POST') <!-- action = 데이터를1 보낼 경로-->
+    imput(name='name', placeholder='Name') <!-- name 속성은 req.body에 key값이 된다.-->
+    input(vlaue='Save', type='submit')
+
+```
+- `form`으로 부터 contorller로 넘어온 정보는 `req.body`에 담겨 있다.
+- 하지만 express는 form을 처리하지 못한다. 그러기 위해서는 `.urlencoded`메소드를 이용한다.
+
+### .urlencoded
+- 시용자의 요청에 의해 request.boby에 들어오는 데이터를 urlencoded 데이터로 파싱한다.
+- 여러가지 옵션을 사용할 수 있다.
+```js
+
+  // server.js
+
+  app.use(express.urlencoded({ extended: true }));
+
+```
+- `extended` 옵션은 중첩된 객체를 허용할지 말지 정하는 것이다. 허용은 true
+
+- post메소드로 데이터를 처리해준다.
+```js
+
+  app.post('/', (req, res) => {
+    const { name } = req.body;
+    const { id }  = req.params;
+    user[id].name = name
+    return res.redirect('/')
+  })
+
+```
+
+## route
+- `.route()`메소드를 이용하면 하나의 경로에 get, post request를 모두 처리해야 할 때 더 짧은 코드로 작성할 수 있다.
+```js
+
+   app.route('/').get().post()
+   // 사용자가 get request를 보내면 get 메소드가 실행될 것이고, post request를 보내면 post 메소드가 실행될 것이다.
+
+```
 
 ## Middleware
 - 사용자의 요청과 서버의 응답 사이에 존재하는 소프트웨어이다.
@@ -241,7 +294,7 @@
   app.use(logger);
 
 ```
-    
+
 # Router
 - 사용자의 요청 경로(path)를 보고 이 요청을 처리할 수 있는 곳(contorller)으로 기능을 전달해주는 역할
 - 어플리케이션 엔드 포인트(URI)의 정의, URI가 사용자 요청에 응답하는 방식을 말한다.
@@ -575,3 +628,72 @@
 
 ```
 
+# Database
+- 데이터베이스에서 데이터
+```js
+
+  // controller.js
+
+    // 우선 임의로 데이터베이스를 배열로 만든다.
+    let videos = [
+      {
+        title: 'First Video',
+        rating: 5,
+        comments: 2,
+        createdAt: '2 minutes ago',
+        views:  59,
+        id: 1,
+      },
+      {
+        title: 'Second Video',
+        rating: 5,
+        comments: 2,
+        createdAt: '2 minutes ago',
+        views:  59,
+        id: 2,
+      },
+    ]
+
+    export const home = (req, res) => {
+      return res.render('home', { pageTitle: 'Home', videos })
+    }
+
+    export const watch = (req, res)  => {
+      // url path에 담겨 있는 정보는 req.params에 저장된다.
+      const { id } = req.params;
+      // 사용자가 url로 요청한 id에 해당하는 객체 불러오기
+      const video = videos[id - 1];
+      return res.render('watch', { pageTitle: `Watching ${video.title}`, video})
+    }
+```
+
+- mixin에 링크를 걸어 해당 url에 부합하는 데이터를 보여주는 페이지로 이동
+```pug
+
+  //- mixins/video.pug
+
+  mixin video(video)
+    div
+      h4
+        //- router의 /videos/:id 경로로 갈 수 있게 링크를 만들어준다.
+        a(href=`/videos/${id}`)=video.title
+      ul
+        li #{video.rating}/5.
+        li #{video.comments} comments.
+        li Posted #{video.createdAt}.
+        li #{video.views} views.
+
+```
+
+```pug
+
+  //- watch.pug
+
+  extends base.pug
+
+  block content
+    h3 #{video.views} #{video.views === 1 ? 'view' : 'views' }
+    a(href=`${video.id}/edit`) Edit Video &rarr;
+    //- 경로 젤 앞에 /를 사용하지 않은 이유는 사용하면 루트 경로에서 시작 되게 설정 되기 때문이다.
+
+```
