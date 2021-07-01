@@ -36,6 +36,9 @@
   - [문법](#문법)
     - [javascript 사용](#javascript-사용)
       - [javascript 문법 사용](#javascript-문법-사용)
+        - [Conditionals](#conditionals)
+        - [Iteration](#iteration)
+    - [mixins](#mixins)
       - [express 변수 사용](#express-변수-사용)
     - [Partials](#partials)
     - [Layout](#layout)
@@ -401,6 +404,101 @@
 
 ```
 
+##### Conditionals
+- javascript의 조건문을 사용할 수 있다.
+```pug
+
+  header
+    nav
+      ul
+        //- 사용자의 로그인 여부에 따라 다르게 보여주는 nav를 예를 든 것
+        if user.loggedIn
+          li
+            a(href='/logout') Logout
+        else
+          li
+            a(href='/login') Login
+
+```
+
+##### Iteration
+- javascript의 반복문을 사용할 수 있다.
+```js
+
+  export const home = (req, res) => {
+    const arr = [1, 2, 3, 4, 5, 6, 7];
+    return res.render('home', { arr });
+  }
+
+```
+```pug
+
+  //- home.pug
+
+  ul
+    each value in arr
+      li=value
+    //- 1부터 7까지 출력
+    else
+      li Nothing found.
+    //- 배열이 비어있으면 else 문이 실행된다.
+
+```
+
+### mixins
+- 같은 형태의 블록이 서로 다른 데이터를 가져야 할 때 사용한다.
+```js
+
+  //- homContorller.js
+
+  export const home = (req, res) => {
+    const people = [
+      {
+        name: 'a',
+        age: 25,
+        from: 'ko',
+      },
+      {
+        name: 'b',
+        age: 29,
+        from: 'en',
+      },
+      {
+        name: 'c',
+        age: 20,
+        from: 'ko',
+      },
+    ]
+    return res.render('home', { people });
+  }
+
+```
+- mixin 생성
+```pug
+
+  //- mixins/people.pug
+
+  mixin people(people)
+    div
+      h4=people.name
+      ul
+        li #{people.age} years old
+        li from #{people.from}
+
+```
+- mixin 사용
+```pug
+
+  //- home.pug
+
+  include mixins/people
+
+  main
+    each person in people
+      +people(person)
+
+```
+
 #### express 변수 사용
 - controller에서 template으로 변수 넘겨주기
 - `.render()`의 두번째 인자로 객체를 넘겨준다.
@@ -416,8 +514,11 @@
 
   //- src/views/home.pug
   
-  head
-      title #{pageTitle}
+  body
+      header #{pageTitle}
+
+      header=pageTitle
+      //- 태그에 변수 하나만을 사용할 때는 = 으로 사용가능하다.
 
 ```
 
@@ -473,3 +574,4 @@
     h1 Home
 
 ```
+
