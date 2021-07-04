@@ -5,7 +5,6 @@ import { search, trending } from "../controllers/videoController";
 const globalRouter = express.Router();
 
 globalRouter.get("/", trending);
-globalRouter.get("/search", search);
 globalRouter.get("/join", join);
 globalRouter.get("/login", login);
 globalRouter.get("/logout", logout);

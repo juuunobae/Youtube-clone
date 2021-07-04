@@ -191,10 +191,12 @@
   //- 
 
   form(method='POST') <!-- action = 데이터를1 보낼 경로-->
-    imput(name='name', placeholder='Name') <!-- name 속성은 req.body에 key값이 된다.-->
+    imput(name='name', placeholder='Name', type='text') <!-- name 속성은 req.body에 key값이 된다.-->
     input(vlaue='Save', type='submit')
 
 ```
+- 타입이 submit인 input을 누르면 현재의 url로 post 요청을 보낸다.
+  - 요청을 보내는 url을 바꾸고 싶으면 form의 action 속성으로 지정해 줄 수 있다.
 - `form`으로 부터 contorller로 넘어온 정보는 `req.body`에 담겨 있다.
 - 하지만 express는 form을 처리하지 못한다. 그러기 위해서는 `.urlencoded`메소드를 이용한다.
 
@@ -613,7 +615,6 @@
 
       include partials/footer.pug
       
-
 ```
 - `extends` 키워드로 사용
 ```pug
@@ -629,7 +630,7 @@
 ```
 
 # Database
-- 데이터베이스에서 데이터
+- 
 ```js
 
   // controller.js
