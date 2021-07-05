@@ -51,8 +51,11 @@
   - [mongoose](#mongoose)
     - [ODM](#odm)
     - [mongoDB에 연결하기](#mongodb에-연결하기)
-    - [CRUD](#crud)
     - [model 생성](#model-생성)
+  - [model 사용](#model-사용)
+      - [CRUD](#crud)
+    - [.find()](#find)
+- [코드 정리](#코드-정리)
 
 
 # Requirements
@@ -73,12 +76,12 @@
   - package.json 문서는 어느 곳에서도 동일한 개발환경을 구축할 수 있게 해준다.
 
 ### git 저장소 생성
-- 터미널 창에 `git init` 설치
+- 터미널 창에 `git init` 입력
 - github에서 repository 생성
-- 터미널 창에 `git remote add [github repository url]` 설치
+- 터미널 창에 `git remote add [github repository url]` 입력
 
 ### package.json 파일 생성
-- 터미널 창에 `npm init` 설치
+- 터미널 창에 `npm init` 입력
 - 질문의 답을 완료하면 파일 생성
     - package name : 패키지의 이름이다.
     - version : 패키지의 버전이다.
@@ -162,10 +165,10 @@
     // express에서 반환된 application객체를 app 변수에 저장
     const app = express();
 
-    // server에 접속이 성공하면 실행 될 콜백함수
+    // server 실행이 성공하면 실행 될 콜백함수
     const handleListening = () => console.log(`Server listening on port http://localhost:${PORT}`);
 
-    // 외부에서 서버에 접속할 때 허용할 포트 설정, 접속에 성공하면 실행 될 콜백함수
+    // 외부에서 서버가 실행될 때 허용할 포트 설정, 접속에 성공하면 실행 될 콜백함수
     app.listen(PORT, handleListening);
 ```
 
@@ -694,12 +697,6 @@
 
 ```
 
-### CRUD
-- Create: 생성
-- Read: 읽기
-- Update: 수정
-- Delete: 삭제
-
 ### model 생성
 - database가 model을 생성하기 위해서 데이터들이 어떻게 구성되는지 알려주어야 한다.
 - 데이터들의 형식과 형태(key의 타입)을 설정해준다.
@@ -731,6 +728,7 @@
     - 작성한 스키마를 기준으로 데이터를 DB에 넣기 전에 먼저 검사하고, 스키마에 어긋나는 데이터가 있으면 에러를 발생시킨다.
 
   - `server.js`파일에 `Video`를 import 해주면 서버를 실행시킬 때 자동으로 실행되고 database에 연결을 시도한다.
+  - model을 미리 컴파일 해야지 사용하고 싶을 때 사용할 수 있다.
     ```js
 
       // server.js
@@ -741,47 +739,82 @@
     
     ```
 
-
-
-
-
----------
+## model 사용
+- controller 파일에 model을 import 해준다.
 ```js
 
   // controller.js
 
-    // 우선 임의로 데이터베이스를 배열로 만든다.
-    let videos = [
-      {
-        title: 'First Video',
-        rating: 5,
-        comments: 2,
-        createdAt: '2 minutes ago',
-        views:  59,
-        id: 1,
-      },
-      {
-        title: 'Second Video',
-        rating: 5,
-        comments: 2,
-        createdAt: '2 minutes ago',
-        views:  59,
-        id: 2,
-      },
-    ]
+  import Video from '../models/Video';
 
-    export const home = (req, res) => {
-      return res.render('home', { pageTitle: 'Home', videos })
-    }
-
-    export const watch = (req, res)  => {
-      // url path에 담겨 있는 정보는 req.params에 저장된다.
-      const { id } = req.params;
-      // 사용자가 url로 요청한 id에 해당하는 객체 불러오기
-      const video = videos[id - 1];
-      return res.render('watch', { pageTitle: `Watching ${video.title}`, video})
-    }
 ```
+- mongoose의 model들은 CRUD operation을 돕는 query 관련 function들을 제공한다.
+
+#### CRUD
+- Create: 생성
+- Read: 읽기
+- Update: 수정
+- Delete: 삭제
+
+### .find()
+-  /
+- **callback function**이나 **promise** 두가지 사용방법이 있다.</br></br>
+
+- Callback Function
+```js
+
+  // controller.js
+
+  import Video from '../models/Video';
+
+  export const home = (req, res) => {
+    // 괄호안에 configuration을 넣어주면 된다.
+    Video.find({}, (error, videos) => {
+      return res.render('home', { videos });
+    })
+    // 중괄호는 search term라고 하고 비어있어으면 모든 값이라는 뜻이다.
+    // callback은 데이터 베이스에서 인자로 error와 docs를 넘겨 받는다.
+    
+  };
+
+```
+- `Video.find({},` 부분까지 database에서 불러온 후 database에서 반응이 있으면 mongoose는 **error**와 **docs**의 값을 불러올 것이다.
+- 그렇기 때문에 render메소드를 callback function안에 넣어준다.
+- **callback**은 아무것도 **return**되지 않아야 한다.
+
+
+# 코드 정리
+- 프로그램을 만들면서 코드가 길어지면 여러 파일로 나누는게 좋다.
+- `init.js`를 생성하고 데이터베이스와 서버를 실행하는 코드를 옮겨준다.
+```js
+
+  // init.js
+
+  import './db';
+  import './models/Video';
+  import app from './server';
+
+  const PORT = 4000;
+
+  const handleListning = () => console.log(`Server listening on port http://localhost:${PORT}`)
+
+  app.listen(PORT, handleListning);
+
+```
+- 기존의 `server.js`파일에는 express application의 configuration에 관련된 코드를 작성한다.
+- `package.json`의 script도 바꿔준다.
+```js
+
+  "scripts": {
+    "dev": "nodemon --exec babel-node src/init.js"
+  },
+
+```
+
+
+
+---------
+
 
 - mixin에 링크를 걸어 해당 url에 부합하는 데이터를 보여주는 페이지로 이동
 ```pug
