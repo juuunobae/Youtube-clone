@@ -1,3 +1,8 @@
+// 서버가 실행될 때 database와 연결을 시도할 수 있게 db 파일을 import
+import "./db";
+// database와 연결이 성공했을 때 인식할 수 있게 Video model import
+import "./models/Video";
+
 import express from "express"; // express 모듈 import
 import morgan from "morgan"; // logging 모듈 import
 

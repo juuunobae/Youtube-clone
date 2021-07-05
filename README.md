@@ -46,6 +46,13 @@
     - [Partials](#partials)
     - [Layout](#layout)
 - [Database](#database)
+  - [mongoDB](#mongodb)
+    - [NoSQL](#nosql)
+  - [mongoose](#mongoose)
+    - [ODM](#odm)
+    - [mongoDB에 연결하기](#mongodb에-연결하기)
+    - [CRUD](#crud)
+    - [model 생성](#model-생성)
 
 
 # Requirements
@@ -374,8 +381,6 @@
 > 정규표현식을 사용해서 변수에 원하늩 타입만 받을 수 있다.</br>
 > `("/:id(\\d+)", )` 숫자 타입의 요청만 받겠다는 것이다.
 
-
-
 # Controller
 - 어플리케이션의 로직을 담당
 - 사용자 요청이 들어왔을 때 그에 해당 하는 데이터를 응답한다.
@@ -630,7 +635,117 @@
 ```
 
 # Database
-- 
+- mongoDB와 mongoose를 사용한다.
+
+## mongoDB
+- 문서지향 저장소를 제공하는 NoSQL 데이터베이스이다.
+- 데이터는 Document로 불리고, 데이터들의 집합을 Collection이라고 한다.
+- NodeJS와 호환이 좋기 때문에 NodeJS에서 가장 많이 사용되는 데이터베이스이다.
+  
+### NoSQL
+- 관계형 데이터 모델을 사용하지 않고 SQL을 사용하지 않는 데이터베이스 시스템 또는 데이트 스토어
+- 단순한 키와 값의 쌍으로 이루어져있는 데이터베이스
+
+## mongoose
+- nodeJS에서 mongoDB와 상호작용하기 위해서 필요한 connector
+- mongoose를 사용해 javascript로 서버와 mongoDB를 연결할 수 있다.
+
+### ODM
+- Object Document Mapping
+- 객체와 문서의 1대1 매칭한다는 뜻
+- Object는 자바스크립트의 객체이고, Document는 mongDB의 문서이다, 문서를 DB에서 조회할 때 자바스크립트 객체로 바꿔주는 역할이라고 생각하면 된다.
+  
+### mongoDB에 연결하기
+- 터미널 창에 `npm install mongoose` 설치
+- 프로젝트 루트 경로에 `db.js` 파일 생성
+  -  mongoDB와 연결 해주는 파일
+- 터미널에 `mongo`를 입력했을 때 나오는 mongoDB의 url이 연결에 사용된다.
+```js
+
+  // db.js
+
+  import mongoose from 'mongoose';
+
+  // server와 mongoDB의 database와 연결해주는 것
+  mongoose.connect(mongoURL/dbName, {
+    useNewUrlParser: true,
+    useUnifiedTopology: ture,
+  });
+
+  const db = mongoose.connection;
+
+  const handleError = (error) => console.log('DB Error', error );
+  const handelOpen = () => console.log('✅ Connected to DB');
+
+  // database에 에러가 나면 이 이벤트가 발생한다.
+  db.on('error', handelError);
+
+  // database에 연결이 성공하면 이 이벤트가 발생한다.
+  db.once('open',  handelOpen)
+
+```
+- `server.js`파일에 `db`를 import 해주면 서버를 실행시킬 때 자동으로 실행되고 database에 연결을 시도한다.
+```js
+
+  // server.js
+
+  // 함수나 모듈을 import 한 것이 아닌 파일 자체를 import 한 것이다.
+  import './db';
+
+```
+
+### CRUD
+- Create: 생성
+- Read: 읽기
+- Update: 수정
+- Delete: 삭제
+
+### model 생성
+- database가 model을 생성하기 위해서 데이터들이 어떻게 구성되는지 알려주어야 한다.
+- 데이터들의 형식과 형태(key의 타입)을 설정해준다.
+- 예를 들어 데이터베이스에 동영상을 저장한다고 할 때 동영상 model을 생성해본다.
+  - models 폴더 -> `Video.js` 파일 생성
+    ```js
+      
+      // Video.js
+
+      import mongoose from 'mongoose';
+      
+      const videoSchema = new mongoose.Schema({
+        title: String,
+        description: String,
+        createAt: Date,
+        hashtags: [{type: String}],
+        meta: {
+          views: Number,
+          rating: Number,
+        },
+      });
+
+      // model을 생성하는데 model 이름과, 데이터의 형태인 schema로 구성된다.
+      const Video = mongoose.model('Video', videoSchema);
+
+      export default Video;
+
+    ```
+    - 작성한 스키마를 기준으로 데이터를 DB에 넣기 전에 먼저 검사하고, 스키마에 어긋나는 데이터가 있으면 에러를 발생시킨다.
+
+  - `server.js`파일에 `Video`를 import 해주면 서버를 실행시킬 때 자동으로 실행되고 database에 연결을 시도한다.
+    ```js
+
+      // server.js
+
+      import './db';
+      // 데이터베이스와 연결이 성공적으로 이루어졌을 때 video model을 인식시킨다.
+      import './models/Video';
+    
+    ```
+
+
+
+
+
+---------
 ```js
 
   // controller.js

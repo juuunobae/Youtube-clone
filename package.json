@@ -17,6 +17,7 @@
   "homepage": "https://github.com/juuunobae/Youtube-clone#readme",
   "dependencies": {
     "express": "^4.17.1",
+    "mongoose": "^5.13.2",
     "morgan": "^1.10.0",
     "pug": "^3.0.2"
   },
