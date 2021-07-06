@@ -1,9 +1,18 @@
 import Video from "../models/Video";
 
-export const trending = (req, res) => {
-  Video.find({}, (error, videos) => {
-    res.render("home", { pageTitle: "Home", videos });
-  });
+// query method, callback function
+// Video.find({}, (error, videos) => {
+//   res.render("home", { pageTitle: "Home", videos });
+// });
+
+export const home = async (req, res) => {
+  try {
+    const videos = await Video.find({});
+    return res.render("home", { pageTitle: "Home", videos });
+  } catch (error) {
+    console.log(error);
+    res.end();
+  }
 };
 
 export const watch = (req, res) => {

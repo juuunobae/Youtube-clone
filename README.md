@@ -55,6 +55,8 @@
   - [model 사용](#model-사용)
       - [CRUD](#crud)
     - [.find()](#find)
+      - [Callback Function](#callback-function)
+      - [Promise](#promise)
 - [코드 정리](#코드-정리)
 
 
@@ -757,10 +759,10 @@
 - Delete: 삭제
 
 ### .find()
--  /
+- 문서(model)을 찾는 queries 메소드
 - **callback function**이나 **promise** 두가지 사용방법이 있다.</br></br>
 
-- Callback Function
+#### Callback Function
 ```js
 
   // controller.js
@@ -770,17 +772,39 @@
   export const home = (req, res) => {
     // 괄호안에 configuration을 넣어주면 된다.
     Video.find({}, (error, videos) => {
-      return res.render('home', { videos });
+      res.render('home', { videos }); // return문이 없어서 render가 실행된다.
     })
     // 중괄호는 search term라고 하고 비어있어으면 모든 값이라는 뜻이다.
     // callback은 데이터 베이스에서 인자로 error와 docs를 넘겨 받는다.
-    
   };
 
 ```
 - `Video.find({},` 부분까지 database에서 불러온 후 database에서 반응이 있으면 mongoose는 **error**와 **docs**의 값을 불러올 것이다.
 - 그렇기 때문에 render메소드를 callback function안에 넣어준다.
 - **callback**은 아무것도 **return**되지 않아야 한다.
+
+#### Promise
+```js
+
+  // controller.js
+
+  import Video from '../models/Video';
+   
+  export const home = async(req, res) => {
+    try{
+      const videos = await Video.find({});
+      return res.render('home', { videos });
+    } catch(error) {
+      console.log(error)
+      return null;
+    }
+  }
+
+```
+- **await**를 사용하면 데이터베이스의 응답을 받을 때 까지 다음 코드가 실행되지 않고 기다렸다가 응답이 있으면 다음 코드가 실행된다.
+- **await**는 함수안에서만 사용가능하고 그 함수에 async를 작성해주어야 한다.
+- promise를 사용하면 error를 처리해 줄 때 try / catch문을 사용하다.
+  - try문을 실행하다 error가 발생하면 catch문을 실행한다.
 
 
 # 코드 정리
@@ -811,38 +835,3 @@
 
 ```
 
-
-
----------
-
-
-- mixin에 링크를 걸어 해당 url에 부합하는 데이터를 보여주는 페이지로 이동
-```pug
-
-  //- mixins/video.pug
-
-  mixin video(video)
-    div
-      h4
-        //- router의 /videos/:id 경로로 갈 수 있게 링크를 만들어준다.
-        a(href=`/videos/${id}`)=video.title
-      ul
-        li #{video.rating}/5.
-        li #{video.comments} comments.
-        li Posted #{video.createdAt}.
-        li #{video.views} views.
-
-```
-
-```pug
-
-  //- watch.pug
-
-  extends base.pug
-
-  block content
-    h3 #{video.views} #{video.views === 1 ? 'view' : 'views' }
-    a(href=`${video.id}/edit`) Edit Video &rarr;
-    //- 경로 젤 앞에 /를 사용하지 않은 이유는 사용하면 루트 경로에서 시작 되게 설정 되기 때문이다.
-
-```
