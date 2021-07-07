@@ -10,7 +10,7 @@ const PORT = 4000;
 
 // 서버 실행이 성공하면 실행될 콜백함수
 const handleListening = () =>
-  console.log(`Server listening on port http://localhost:${PORT}`);
+  console.log(`✅Server listening on port http://localhost:${PORT}`);
 
 // 외부에서 서버에 접속할 때 허용할 포트 설정, 서버 실행에 성공하면 실행 될 콜백함수
 app.listen(PORT, handleListening);

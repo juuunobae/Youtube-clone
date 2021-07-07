@@ -53,10 +53,15 @@
     - [mongoDB에 연결하기](#mongodb에-연결하기)
     - [model 생성](#model-생성)
   - [model 사용](#model-사용)
-      - [CRUD](#crud)
+    - [CRUD](#crud)
+    - [**Read**](#read)
     - [.find()](#find)
       - [Callback Function](#callback-function)
       - [Promise](#promise)
+    - [**Update**](#update)
+    - [.findById()](#findbyid)
+- [에러처리](#에러처리)
+  - [async/await 에러](#asyncawait-에러)
 - [코드 정리](#코드-정리)
 
 
@@ -384,7 +389,6 @@
   - `{ id: 234545 }` 출력
 
 > 정규표현식을 사용해서 변수에 원하늩 타입만 받을 수 있다.</br>
-> `("/:id(\\d+)", )` 숫자 타입의 요청만 받겠다는 것이다.
 
 # Controller
 - 어플리케이션의 로직을 담당
@@ -514,7 +518,7 @@
 - 같은 형태의 블록이 서로 다른 데이터를 가져야 할 때 사용한다.
 ```js
 
-  //- homContorller.js
+  //- homeContorller.js
 
   export const home = (req, res) => {
     const people = [
@@ -543,12 +547,12 @@
 
   //- mixins/people.pug
 
-  mixin people(people)
+  mixin people(person)
     div
-      h4=people.name
+      h4=person.name
       ul
-        li #{people.age} years old
-        li from #{people.from}
+        li #{person.age} years old
+        li from #{person.from}
 
 ```
 - mixin 사용
@@ -711,13 +715,33 @@
       import mongoose from 'mongoose';
       
       const videoSchema = new mongoose.Schema({
-        title: String,
-        description: String,
-        createAt: Date,
-        hashtags: [{type: String}],
+        title: {
+          type: String,  
+          required: true,
+          trim: true,
+          maxLangth: 80
+        },
+        description: {
+          type: String,  
+          required: true,
+          trim: true, // 문자열의 좌우 공백을 없애준다.
+          maxLength: 140, // 최대 허용 글자 수 => template input 속성도 설정해준다.
+        },
+        createAt: { 
+          type: Date,  // 데이터 타입 설정
+          required: true, // true = 필수 값
+          default: Date.now // 기본값
+        },
+        hashtags: [{type: String, trim: true}],
         meta: {
-          views: Number,
-          rating: Number,
+          views: {
+            type: Number, 
+            default: 0,
+          },
+          rating: {
+            type: Number, 
+            default: 0,
+          },
         },
       });
 
@@ -728,6 +752,7 @@
 
     ```
     - 작성한 스키마를 기준으로 데이터를 DB에 넣기 전에 먼저 검사하고, 스키마에 어긋나는 데이터가 있으면 에러를 발생시킨다.
+    - 스키마는 타입뿐만 아니라 여러 옵션을 설정할 수 있다.
 
   - `server.js`파일에 `Video`를 import 해주면 서버를 실행시킬 때 자동으로 실행되고 database에 연결을 시도한다.
   - model을 미리 컴파일 해야지 사용하고 싶을 때 사용할 수 있다.
@@ -752,14 +777,15 @@
 ```
 - mongoose의 model들은 CRUD operation을 돕는 query 관련 function들을 제공한다.
 
-#### CRUD
+### CRUD
 - Create: 생성
 - Read: 읽기
 - Update: 수정
 - Delete: 삭제
 
+### **Read**
 ### .find()
-- 문서(model)을 찾는 queries 메소드
+- document(model)을 찾는 queries 메소드
 - **callback function**이나 **promise** 두가지 사용방법이 있다.</br></br>
 
 #### Callback Function
@@ -806,6 +832,115 @@
 - promise를 사용하면 error를 처리해 줄 때 try / catch문을 사용하다.
   - try문을 실행하다 error가 발생하면 catch문을 실행한다.
 
+### **Update**
+- 사용자에게 입력받을 폼
+```pug
+
+  //- upload.pug
+
+  form(method='POST')
+    input(name='title', placeholder='Title', required, type='text', maxlength=20)
+    input(name='description', placeholder='Description', required, type='text', maxlength=140)
+    input(name='hashtags', placeholder='Hashtags, separated by comma', required, type='text')
+    input(type='submit', value='Save')
+
+```
+- 사용자의 입력을 받아 database에 upload하는 controller
+```js
+
+  // controller.js
+
+  export const postUpload = async(req, res) => {
+    const { title, description, hashtags } = req.body;
+
+    // document(model) 생성
+    // const video = new Video({
+    //   title,
+    //   description,
+    //   createdAt: Date.now(),
+    //   hashtages: hashtags.split(',').map(word => `#${word}`),
+    //   meta: {
+    //     views: 0,
+    //     rating: 0
+    //   },
+    // })
+    // // 생성 후 저장
+    // await video.save();
+
+    // create 메소드를 사용하면 생성 후 바로 저장 된다.
+
+    try {
+      await Video.create({
+        title,
+        description,
+        hashtages: hashtags.split(',').map(word => `#${word}`),
+      })
+      return res.redirect('/');
+    } catch(error) {
+      console.log(error)
+      // 에러가 발생하면 다시 업로드하는 페이지를 랜더한다.
+      return res.render('upload', { pageTitle: 'Upload Video' });
+    }
+  }
+
+```
+
+### .findById()
+- id로 document(model)을 찾는 queries 메소드
+```js
+
+  // controller.js
+
+  import Video from '../models/Video';
+
+  export const detail = async(req, res) => {
+    const { id } = req.params
+    const video = await Video.findById(id);
+    return res.render('detail', { video })
+  }
+
+```
+> database에 저장될 때 부여해주는 id는 16진수에 24바이트로 되어있다.</br>
+> router에 동적 url을 설정해줄 때 `/:id([0-9a-f]{24})`와 같이 정규표현식을 사용할 수 있다.
+
+
+# 에러처리
+## async/await 에러
+- await문에서 에러가 나면 javascript는 더 이상 코드를 실행시키지 않는다.
+- try / catch문을 사용하고, 에러가 발생하면 실행될 catch문에 페이지를 다시 랜더하고 페이지에 보여줄 에러 메시지를 넘겨준다.
+```js
+
+  // controller.js
+  
+  export const postUpload = async(req, res) => {
+    const { title, description, hashtags } = req.body
+
+    try {
+      throw error
+      return res.redirect('/');
+    } catch(error) {
+      console.log(error)
+      // 에러가 발생하면 다시 업로드하는 페이지를 랜더한다.
+      return res.render('upload', { pageTitle: 'Upload Video', errorMessage: error._message });
+    }
+  }
+
+```
+- template에서 조건문을 사용해 에러메세지 작성
+```pug
+
+  //- upload.pug
+
+  extends base.pug
+
+  block content
+    if errorMessage
+      span=errorMessage
+    form
+      input...
+      input...
+
+```
 
 # 코드 정리
 - 프로그램을 만들면서 코드가 길어지면 여러 파일로 나누는게 좋다.
@@ -834,4 +969,5 @@
   },
 
 ```
+
 
