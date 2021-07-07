@@ -60,6 +60,7 @@
       - [Promise](#promise)
     - [**Update**](#update)
     - [.findById()](#findbyid)
+    - [](#)
 - [에러처리](#에러처리)
   - [async/await 에러](#asyncawait-에러)
 - [코드 정리](#코드-정리)
@@ -896,13 +897,38 @@
   export const detail = async(req, res) => {
     const { id } = req.params
     const video = await Video.findById(id);
-    return res.render('detail', { video })
+    if(!video){
+      return res.render('404', { pageTitle: 'Video not found.' });
+    } 
+    return res.render('detail', { video });
   }
 
 ```
 > database에 저장될 때 부여해주는 id는 16진수에 24바이트로 되어있다.</br>
 > router에 동적 url을 설정해줄 때 `/:id([0-9a-f]{24})`와 같이 정규표현식을 사용할 수 있다.
 
+
+### 
+
+```js
+
+  // controller.js
+
+  export const getEdit = async(req, res) => {
+    const { id } = req.params;
+    const video = await Video.findById(id);
+    if(!video){
+      return res.render('404', { pageTitle: 'Video not found.' });
+    } 
+    return res.render('edit', { video });
+  }
+
+  export const postEdit = async(req, res) => {
+    
+  }
+
+
+```
 
 # 에러처리
 ## async/await 에러
