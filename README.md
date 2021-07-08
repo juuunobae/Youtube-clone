@@ -51,16 +51,21 @@
   - [mongoose](#mongoose)
     - [ODM](#odm)
     - [mongoDB에 연결하기](#mongodb에-연결하기)
-    - [model 생성](#model-생성)
+  - [model 생성](#model-생성)
   - [model 사용](#model-사용)
     - [CRUD](#crud)
     - [**Read**](#read)
     - [.find()](#find)
       - [Callback Function](#callback-function)
       - [Promise](#promise)
-    - [**Update**](#update)
     - [.findById()](#findbyid)
-    - [](#)
+    - [**Create**](#create)
+    - [.create()](#create-1)
+    - [**Update**](#update)
+    - [.findByIdAndUpdate()](#findbyidandupdate)
+  - [Middleware](#middleware-1)
+    - [.pre()](#pre)
+    - [.static()](#static)
 - [에러처리](#에러처리)
   - [async/await 에러](#asyncawait-에러)
 - [코드 정리](#코드-정리)
@@ -704,7 +709,7 @@
 
 ```
 
-### model 생성
+## model 생성
 - database가 model을 생성하기 위해서 데이터들이 어떻게 구성되는지 알려주어야 한다.
 - 데이터들의 형식과 형태(key의 타입)을 설정해준다.
 - 예를 들어 데이터베이스에 동영상을 저장한다고 할 때 동영상 model을 생성해본다.
@@ -833,7 +838,33 @@
 - promise를 사용하면 error를 처리해 줄 때 try / catch문을 사용하다.
   - try문을 실행하다 error가 발생하면 catch문을 실행한다.
 
-### **Update**
+
+### .findById()
+- id로 document(model)을 찾는 queries 메소드
+```js
+
+  // controller.js
+
+  import Video from '../models/Video';
+
+  export const detail = async(req, res) => {
+    const { id } = req.params
+    const video = await Video.findById(id);
+    if(!video){
+      return res.render('404', { pageTitle: 'Video not found.' });
+    } 
+    return res.render('detail', { video });
+  }
+
+```
+> database에 저장될 때 부여해주는 id는 16진수에 24바이트로 되어있다.</br>
+> router에 동적 url을 설정해줄 때 `/:id([0-9a-f]{24})`와 같이 정규표현식을 사용할 수 있다.
+
+
+### **Create**
+### .create()
+- document(model)을 데이터베이스에 저장하기 위한 queries 메소드
+- `.create`는 save()메소드를 실행시킨다.
 - 사용자에게 입력받을 폼
 ```pug
 
@@ -874,42 +905,21 @@
       await Video.create({
         title,
         description,
-        hashtages: hashtags.split(',').map(word => `#${word}`),
+        hashtages,
       })
       return res.redirect('/');
     } catch(error) {
       console.log(error)
       // 에러가 발생하면 다시 업로드하는 페이지를 랜더한다.
-      return res.render('upload', { pageTitle: 'Upload Video' });
+      return res.render('upload', { pageTitle: error });
     }
   }
 
 ```
 
-### .findById()
-- id로 document(model)을 찾는 queries 메소드
-```js
-
-  // controller.js
-
-  import Video from '../models/Video';
-
-  export const detail = async(req, res) => {
-    const { id } = req.params
-    const video = await Video.findById(id);
-    if(!video){
-      return res.render('404', { pageTitle: 'Video not found.' });
-    } 
-    return res.render('detail', { video });
-  }
-
-```
-> database에 저장될 때 부여해주는 id는 16진수에 24바이트로 되어있다.</br>
-> router에 동적 url을 설정해줄 때 `/:id([0-9a-f]{24})`와 같이 정규표현식을 사용할 수 있다.
-
-
-### 
-
+### **Update**
+### .findByIdAndUpdate()
+- id로 document(model)을 찾고 해당 document를 수정하는 queries 메소드
 ```js
 
   // controller.js
@@ -924,9 +934,108 @@
   }
 
   export const postEdit = async(req, res) => {
-    
+    const { id } = req.params;
+    const { title, description, hashtags } = req.body;
+    const video = await Video.exists({ _id: id });
+    // exists 메소드는 document의 객체를 받는대신 데이터가 존재하면 true를 리턴한다.
+    if(!video){
+      return res.render('404', { pageTitle: 'Video not found.' });
+    } 
+    await Video.findByIdAndUpdate(id, {
+      title, 
+      description,
+      hashtags,
+    })
+    return res.render('edit', { video });
   }
 
+```
+
+## Middleware
+- document에 이벤트가 발생하기 전이나 후에 어떠한 동작을 실행하는 것
+- middleware에 this를 바인딩하여 사용할 수 있고, 훅의 종류에 따라 가리키는 것이 다르다.
+
+### .pre()
+- 이벤트가 발생하기 전에 실핼되는 middleware
+- `schema.pre([hook], [async function])`
+```js
+
+  // Video.js
+
+  import mongoose from 'mongoose';
+      
+  const videoSchema = new mongoose.Schema({
+    title: {
+      type: String,  
+      required: true,
+      trim: true,
+      maxLangth: 80
+    },
+    description: {
+      type: String,  
+      required: true,
+      trim: true, // 문자열의 좌우 공백을 없애준다.
+      maxLength: 140, // 최대 허용 글자 수 => template input 속성도 설정해준다.
+    },
+    createAt: { 
+      type: Date,  // 데이터 타입 설정
+      required: true, // true = 필수 값
+      default: Date.now // 기본값
+    },
+    hashtags: [{type: String, trim: true}],
+    meta: {
+      views: {
+        type: Number, 
+        default: 0,
+      },
+      rating: {
+        type: Number, 
+        default: 0,
+      },
+    },
+  });
+
+  // 아래 middleware는 document가 save()가 실행되기 전 즉, 저장되기 직전에 실행되는 것이다.
+  videoSchema.pre('save', async function() {
+    this.hashtags = this.hashtags[0].split(',').map(word => word.startsWith('#') ? word : `#${word}`)
+  })
+
+  // model이 생성되기 전에 만들어야 한다.
+
+  // model을 생성하는데 model 이름과, 데이터의 형태인 schema로 구성된다.
+  const Video = mongoose.model('Video', videoSchema);
+
+  export default Video;
+```
+- **save hook**이 발생하면 async function이 실행되고 save hook의 this는 현재 저장할 document를 가리키는 것이다.
+- document를 가리키는 this는 `validate, save, remove, init(synchronous)` hook에서만 바인딩 되기 때문에 다른 미들웨어 함수에서는 다른 방법을 사용해야 한다. 
+- `.static()`을 이용해 메소드를 직접 만들어 document를 변경하는 방법이 있다.
+
+### .static()
+- queries 메소드들 같이 원하는 함수를 만들 수 있다.
+- schema.static([메소드 이름], [함수])
+```js
+
+  // Video.js
+
+  videoSchema.static('formatHashtags', function (hashtags) {
+    return hashtags[0].split(',').map(word => word.startsWith('#') ? word : `#${word}`);
+  })
+
+```
+- import를 하지 않아도 사용할 수 있다.
+```js
+
+  // controller.js
+
+  export const postEdit = async(req, res) => {
+    await Video.findByIdAndUpdate(id, {
+      title, 
+      description,
+      hashtags: Video.formatHashtags(hashtags),
+    })
+    return res.render('edit', { video });
+  }
 
 ```
 
