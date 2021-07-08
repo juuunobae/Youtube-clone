@@ -28,6 +28,7 @@
     - [.urlencoded](#urlencoded)
   - [route](#route)
   - [Middleware](#middleware)
+    - [global middleware `.use()` 메소드](#global-middleware-use-메소드)
   - [Third party middleware](#third-party-middleware)
     - [Morgan](#morgan)
 - [Router](#router)
@@ -66,6 +67,8 @@
   - [Middleware](#middleware-1)
     - [.pre()](#pre)
     - [.static()](#static)
+    - [**Delete**](#delete)
+    - [.findByIdAndDelete()](#findbyidanddelete)
 - [에러처리](#에러처리)
   - [async/await 에러](#asyncawait-에러)
 - [코드 정리](#코드-정리)
@@ -214,7 +217,7 @@
   //- 
 
   form(method='POST') <!-- action = 데이터를1 보낼 경로-->
-    imput(name='name', placeholder='Name', type='text') <!-- name 속성은 req.body에 key값이 된다.-->
+    input(name='name', placeholder='Name', type='text') <!-- name 속성은 req.body에 key값이 된다.-->
     input(vlaue='Save', type='submit')
 
 ```
@@ -241,7 +244,6 @@
   app.post('/', (req, res) => {
     const { name } = req.body;
     const { id }  = req.params;
-    user[id].name = name
     return res.redirect('/')
   })
 
@@ -251,7 +253,7 @@
 - `.route()`메소드를 이용하면 하나의 경로에 get, post request를 모두 처리해야 할 때 더 짧은 코드로 작성할 수 있다.
 ```js
 
-   app.route('/').get().post()
+   app.route('/').get(getController).post(postController)
    // 사용자가 get request를 보내면 get 메소드가 실행될 것이고, post request를 보내면 post 메소드가 실행될 것이다.
 
 ```
@@ -283,7 +285,8 @@
 ```
 - 위 코드처럼 get 메소드안에 **middleware**를 넣으면 그 요청에만 **middleware**가 동작한다.
 - 여러개의 get 메소드에 대해 **middleware**를 동작 시키고 싶으면 `global middleware`를 사용한다.
-- `.use()` 메소드
+
+### global middleware `.use()` 메소드
     ```js
 
         const handleHome = (req, res) => res.send('Home');
@@ -327,23 +330,29 @@
 - **`express.Router()`** 사용
 ```js
 
+  // .Router 메소드로 라우터를 만들어준다.
   const Router = express.Router();
-  const userRouter = express.Router();
+  const videoRouter = express.Router();
 
-  const handleHome = (req, res) => res.send('Home')
-  const handleEditUser = (req, res) => res.send('Edit User')
-
+  // middleware로 라우터 경로를 설정해준다.
   app.use('/', Rotuer);
-  app.use('/users', userRouter);
+  app.use('/videos', videoRouter);
 
-  Router.get('/', handleHome)
-  userRouter.get('/edit', handleEditUser)
+  // controller
+  const home = (req, res) => res.send('Home')
+  const editVideo = (req, res) => res.send('Edit Video')
+
+  // 사용자가 '/'(root url)로 요청했을 때 응답하는 코드
+  Router.get('/', home)
+
+  // 사용자가 '/videos/edit' url로 요청했을 때 응답하는 코드
+  userRouter.get('/edit', editVideo)
 
 ```
- - - `.use()`를 사용해 각 카테고리별 대표 경로를 정의하고, 콜백함수로 연결시켜줄 Router를 적용해준다.
+- - `.use()`를 사용해 각 카테고리별 대표 경로를 정의하고, 콜백함수로 연결시켜줄 Router를 적용해준다.
     - 사용자가 어떠한 url로 접근 시 그에 해당하는 router로 연결해주고 그 router에서 그 url에 해당하는 controller를 찾아줄것이다.
-    - 위의 코드로 예를 들면 사용자가 /users/edit라는 url로 접근한다고 했을 때
-    - 먼저 서버는 /users라는 url이 들어오면 app.use의 userRouter를 실행시킨다. 그 다음 userRouter에서 /edit와 일치하는 handleEditUser를 실행시킨다.
+    - 위의 코드로 예를 들면 사용자가 /videos/edit라는 url로 접근한다고 했을 때
+    - 먼저 서버는 /videos url이 들어오면 app.use의 videoRouter 실행시킨다. 그 다음 videoRouter에서 /edit와 일치하는 editVideo 실행시킨다.
 
 - **controllers**와 **routers** 폴더를 만들어서 router 별로 분리하기
   - 각 카테고리 별로 router 파일과 controller 파일을 만든다.
@@ -382,15 +391,15 @@
 
   import express from 'express';
 
-  const userRouter = express.Router();
+  const videoRouter = express.Router();
 
   // 해당 router는 /users/:id 와 같다
-  userRouter.get('/:id', user);
+  videoRouter.get('/:id', video);
 
-  export default userRouter;
+  export default videoRouter;
 
 ```
-- 예를 들어 브라우저에서 /users/234545 라고 요청이 들어오면 **234545** 이 부분이 `:id`로 인식이 되는  것이고 그에 해당하는 페이지를 응답한다.
+- 예를 들어 브라우저에서 /videos/234545 라고 요청이 들어오면 **234545** 이 부분이 `:id`로 인식이 되는 것이고 그에 해당하는 페이지를 응답한다.
 - `:id`로 요청 받은 값은 `req.params`로 가져올 수 있다.
   - `{ id: 234545 }` 출력
 
@@ -404,7 +413,7 @@
 
   // src/controllers/homeController.js
 
-  export const Home = (req, res) => res.send('Home')
+  export const home = (req, res) => res.send('Home')
 
 ```
 - default로 export를 하게 되면 하나의 모듈만 할 수 있으므로 각 controller를 export 해준다.
@@ -412,11 +421,11 @@
   
   // src/routers/Router.js
 
-  import { Home } from '../controllers/homeController';
+  import { home } from '../controllers/homeController';
 
   const Router = express.Router();
 
-  Router.get('/', Home);
+  Router.get('/', home);
 
 ```
 - 필요한 모듈을 import 해서 사용한다.
@@ -450,7 +459,7 @@
 
   // src/controllers/homeController.js
 
-  export const Home = (req, res) => res.render('home');
+  export const home = (req, res) => res.render('home');
 
 ```
 
@@ -527,24 +536,24 @@
   //- homeContorller.js
 
   export const home = (req, res) => {
-    const people = [
+    const videos = [
       {
-        name: 'a',
-        age: 25,
-        from: 'ko',
+        title: 'a',
+        rating: 5,
+        views: 46,
       },
       {
-        name: 'b',
-        age: 29,
-        from: 'en',
+        title: 'b',
+        rating: 2,
+        views: 46,
       },
       {
-        name: 'c',
-        age: 20,
-        from: 'ko',
+        title: 'c',
+        rating: 0,
+        views: 46,
       },
     ]
-    return res.render('home', { people });
+    return res.render('home', { videos });
   }
 
 ```
@@ -553,12 +562,11 @@
 
   //- mixins/people.pug
 
-  mixin people(person)
+  mixin videos(video)
     div
-      h4=person.name
-      ul
-        li #{person.age} years old
-        li from #{person.from}
+      h4=video.title
+      h6=video.rating
+      h5=video.views
 
 ```
 - mixin 사용
@@ -569,10 +577,11 @@
   include mixins/people
 
   main
-    each person in people
-      +people(person)
+    each video in videos
+      +videos(video)
 
 ```
+- +videos는 mixins 파일의 mixin과 이름이 같아야 한다.
 
 #### express 변수 사용
 - controller에서 template으로 변수 넘겨주기
@@ -899,6 +908,7 @@
     // // 생성 후 저장
     // await video.save();
 
+
     // create 메소드를 사용하면 생성 후 바로 저장 된다.
 
     try {
@@ -946,7 +956,7 @@
       description,
       hashtags,
     })
-    return res.render('edit', { video });
+    return res.redirect(`/videos/${id}`);
   }
 
 ```
@@ -965,33 +975,13 @@
   import mongoose from 'mongoose';
       
   const videoSchema = new mongoose.Schema({
-    title: {
-      type: String,  
-      required: true,
-      trim: true,
-      maxLangth: 80
-    },
-    description: {
-      type: String,  
-      required: true,
-      trim: true, // 문자열의 좌우 공백을 없애준다.
-      maxLength: 140, // 최대 허용 글자 수 => template input 속성도 설정해준다.
-    },
-    createAt: { 
-      type: Date,  // 데이터 타입 설정
-      required: true, // true = 필수 값
-      default: Date.now // 기본값
-    },
+    title: { type: String, required: true, trim: true, maxLangth: 80 },
+    description: { type: String, required: true, trim: true, maxLength: 140,  },
+    createAt: {  type: Date, required: true, default: Date.now },
     hashtags: [{type: String, trim: true}],
     meta: {
-      views: {
-        type: Number, 
-        default: 0,
-      },
-      rating: {
-        type: Number, 
-        default: 0,
-      },
+      views: { type: Number, default: 0, },
+      rating: { type: Number, default: 0, },
     },
   });
 
@@ -1006,7 +996,9 @@
   const Video = mongoose.model('Video', videoSchema);
 
   export default Video;
+
 ```
+
 - **save hook**이 발생하면 async function이 실행되고 save hook의 this는 현재 저장할 document를 가리키는 것이다.
 - document를 가리키는 this는 `validate, save, remove, init(synchronous)` hook에서만 바인딩 되기 때문에 다른 미들웨어 함수에서는 다른 방법을 사용해야 한다. 
 - `.static()`을 이용해 메소드를 직접 만들어 document를 변경하는 방법이 있다.
@@ -1036,6 +1028,28 @@
     })
     return res.render('edit', { video });
   }
+
+```
+
+### **Delete**
+### .findByIdAndDelete()
+```js
+
+  export const deleteVideo = async(req, res) => {
+    const { id } = req.params
+    await Video.findByIdAndDelete(id)
+    return res.redirect('/');
+  }
+
+```
+> 
+
+- 삭제 Router
+```js
+
+  //  router.js
+
+  videoRouter.route('/:id/([0-9a-f]{24})/delete').get(deleteVideo)
 
 ```
 

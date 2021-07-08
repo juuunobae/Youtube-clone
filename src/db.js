@@ -12,7 +12,7 @@ const db = mongoose.connection;
 
 // 이벤트 발생 시 콜백함수
 const handleError = (error) => console.log("❌DB Error", error);
-const handleOpen = () => console.log("✅ Connected DB");
+const handleOpen = () => console.log("✅Connected DB");
 
 // database 연결 시 에러가 발생하면 실행될 이벤트
 db.on("error", handleError);
