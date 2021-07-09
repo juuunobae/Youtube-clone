@@ -73,6 +73,8 @@
 - [에러처리](#에러처리)
   - [async/await 에러](#asyncawait-에러)
 - [코드 정리](#코드-정리)
+- [User Authentication](#user-authentication)
+  - [회원가입](#회원가입)
 
 
 # Requirements
@@ -1169,4 +1171,36 @@
 
 ```
 
+# User Authentication
+## 회원가입
+- **User Model 생성**
+```js
 
+  // models/User.js
+
+  import mongoose from 'mongoose';
+
+  const userSchema = new mongoose.Schema({
+    email: { type: String, required: true, unique: true },
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    name: { type: String, required: true },
+    location: String
+  }) 
+
+  const User = mongoose.model('User', userSchema);
+
+  export default User;
+
+``` 
+- 회원가입 화면 
+```pug
+
+  //- join.pug
+
+  extends base.pug
+
+  block content
+    
+
+```
