@@ -64,11 +64,12 @@
     - [.create()](#create-1)
     - [**Update**](#update)
     - [.findByIdAndUpdate()](#findbyidandupdate)
+    - [**Delete**](#delete)
+    - [.findByIdAndDelete()](#findbyidanddelete)
   - [Middleware](#middleware-1)
     - [.pre()](#pre)
     - [.static()](#static)
-    - [**Delete**](#delete)
-    - [.findByIdAndDelete()](#findbyidanddelete)
+  - [Search](#search)
 - [에러처리](#에러처리)
   - [async/await 에러](#asyncawait-에러)
 - [코드 정리](#코드-정리)
@@ -961,6 +962,28 @@
 
 ```
 
+### **Delete**
+### .findByIdAndDelete()
+- id로 document(model)을 찾고 해당 document를 삭제하는 queries 메소드
+```js
+
+  export const deleteVideo = async(req, res) => {
+    const { id } = req.params
+    await Video.findByIdAndDelete(id)
+    return res.redirect('/');
+  }
+
+```
+
+- 삭제 Router
+```js
+
+  //  router.js
+
+  videoRouter.route('/:id/([0-9a-f]{24})/delete').get(deleteVideo)
+
+```
+
 ## Middleware
 - document에 이벤트가 발생하기 전이나 후에 어떠한 동작을 실행하는 것
 - middleware에 this를 바인딩하여 사용할 수 있고, 훅의 종류에 따라 가리키는 것이 다르다.
@@ -1031,25 +1054,52 @@
 
 ```
 
-### **Delete**
-### .findByIdAndDelete()
+## Search
+- Router
 ```js
 
-  export const deleteVideo = async(req, res) => {
-    const { id } = req.params
-    await Video.findByIdAndDelete(id)
-    return res.redirect('/');
+  // Router.js
+
+  Router.get('/serach', search)
+
+```
+- controller
+```js
+
+  // controller.js
+
+  export const search = async(req, res) => {
+    const { keyword } = req.query
+    let videos = [];
+    if(keyword){
+      videos = await Video.find({
+        title: {
+          // 정규표현식을 이용해 검색 설정을 해줄 수 있다.
+          // mongoDB에서 제공하는 operator를 통해 find()에 옵션을 줄 수 있다.
+          $regex: new RegExp(keyword, 'i') // 정규표현식 객체 생성자 함수를 사용해 정규표현식 사용
+        },
+      })
+    }
+    return res.render('search', { pageTitle: 'Search', videos });
   }
 
 ```
-> 
 
-- 삭제 Router
-```js
+- template
+```pug
 
-  //  router.js
+  //- search.pug
+  extends base.pug
+  include mixins/video
 
-  videoRouter.route('/:id/([0-9a-f]{24})/delete').get(deleteVideo)
+  block content
+    form(method='GET')
+      input(placeholder='Search by title', type='text', name='keyword')
+      input(type='submit', value='Search now')
+
+    div
+      each video in videos
+        +video(video)
 
 ```
 
