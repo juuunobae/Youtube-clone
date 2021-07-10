@@ -74,7 +74,7 @@
   - [async/await 에러](#asyncawait-에러)
 - [코드 정리](#코드-정리)
 - [User Authentication](#user-authentication)
-  - [회원가입](#회원가입)
+  - [User Model 생성](#user-model-생성)
 
 
 # Requirements
@@ -1172,8 +1172,8 @@
 ```
 
 # User Authentication
-## 회원가입
-- **User Model 생성**
+## User Model 생성
+- **회원가입**
 ```js
 
   // models/User.js
@@ -1181,6 +1181,7 @@
   import mongoose from 'mongoose';
 
   const userSchema = new mongoose.Schema({
+    // unique는 유일한 값을 의미한다.
     email: { type: String, required: true, unique: true },
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
@@ -1193,7 +1194,10 @@
   export default User;
 
 ``` 
-- 회원가입 화면 
+> schema에 unique를 사용하면 경고가 뜬다.
+> 경고를 무시해도 되지만 없애고 싶으면 `mongoose.connect`에 `useCreateIndex: true`를 추가하면 된다.
+
+- join template 
 ```pug
 
   //- join.pug
@@ -1201,6 +1205,48 @@
   extends base.pug
 
   block content
-    
+    form(method='POST')
+      input(placeholder='Name', name='name', type='text', required)
+      input(placeholder='Email', name='email', type='email', required)
+      input(placeholder='Username', name='username', type='text', required)
+      input(placeholder='Password', name='password', type='password', required)
+      input(placeholder='Location', name='location', type='text', required)
+      input(type='submin', value='Join')
+
+```
+- join controller
+```js
+
+  // controller.js
+
+  import User from '../models/User';
+
+  export const getJoin = (req,r es) =>  {
+    return res.render('join', { pageTitle: 'Join' })
+  }
+
+  export const postJoin = async(req, res) => {
+    const { email, username, password, name, location}
+    await User.create({
+      email,
+      username,
+      password,
+      name,
+      location
+    })
+    return res.redirect('/login')
+  }
+
+
+```
+> 콘솔창에 **DeprecationWarning**경고가 뜨면 오래된 기능을 업데이트 하라는 것이다.
+
+- join routing
+```js
+
+  // router.js
+  import { getJoin, postJoin } from '../controllers/conroller.js';
+
+  Router.route('/join').get(getJoin).post(postJoin)
 
 ```

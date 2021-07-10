@@ -2,7 +2,7 @@ import express from "express"; // express 모듈 import
 import morgan from "morgan"; // logging 모듈 import
 
 // Router import
-import globalRouter from "./routers/globalRouter";
+import rootRouter from "./routers/rootRouter";
 import userRouter from "./routers/userRouter";
 import videoRouter from "./routers/videoRouter";
 
@@ -20,7 +20,7 @@ app.use(logger);
 // request.body를 사용하기 위해 데이터 파싱
 app.use(express.urlencoded({ extended: true }));
 // Routing
-app.use("/", globalRouter);
+app.use("/", rootRouter);
 app.use("/users", userRouter);
 app.use("/videos", videoRouter);
 
