@@ -74,9 +74,11 @@
   - [async/await 에러](#asyncawait-에러)
 - [코드 정리](#코드-정리)
 - [User Authentication](#user-authentication)
-  - [User Model 생성](#user-model-생성)
+  - [**회원가입**](#회원가입)
+    - [User Model 생성](#user-model-생성)
   - [password hash](#password-hash)
     - [bcrypt 사용](#bcrypt-사용)
+  - [**Login**](#login)
 
 
 # Requirements
@@ -1174,8 +1176,8 @@
 ```
 
 # User Authentication
-## User Model 생성
-- **회원가입**
+## **회원가입**
+### User Model 생성
 ```js
 
   // models/User.js
@@ -1215,6 +1217,10 @@
       input(placeholder='Confirm Password', name='password2', type='password', required)
       input(placeholder='Location', name='location', type='text', required)
       input(type='submin', value='Join')
+    hr
+    div
+      span Already have an accout? 
+      a(href='/login') Login &rrar;
 
 ```
 - join controller
@@ -1231,7 +1237,7 @@
   export const postJoin = async(req, res) => {
     const { email, username, password, password2, name, location}
     // exists메소드에 $or operator를 사용해 조건중 하나라도 true이면 true를 return한다.
-    const Exists = await User.exists({ $or: [{ username }, { email }] })
+    const exists = await User.exists({ $or: [{ username }, { email }] })
 
     // 비밀번호와 확인 비밀번호가 같은지 확인
     if(password !== password2){
@@ -1240,19 +1246,24 @@
       // template에 에러메시지 표시를 위한 코드를 작성해준다.
     }
 
-    if(Exists){
+    if(exists){
       return res.status(400).render('join', { pageTitle: 'Join', errorMessage: 'This username/email is already  taken' })
       // template에 에러메시지 표시를 위한 코드를 작성해준다.
     }
 
-    await User.create({
-      email,
-      username,
-      password,
-      name,
-      location
-    })
-    return res.redirect('/login')
+    try{
+      await User.create({
+        email,
+        username,
+        password,
+        name,
+        location
+      })
+      return res.redirect('/login')
+
+    }catch(error) {
+      return res.status(400). render('join', {  pageTitle: 'Join', errorMessage: error._message })
+    }
   }
 
 
@@ -1268,6 +1279,7 @@
   Router.route('/join').get(getJoin).post(postJoin)
 
 ```
+
 ## password hash
 ###  bcrypt 사용
 - 단방향 암호화를 위해 만들어진 해시 함수
@@ -1299,3 +1311,67 @@
 ```
 - .pre 메소드를 사용해 user를 저장하기 전에 password를 해싱해준다.
 - bcrypt.hash 함수에 해싱할 데이터를 넣고 몇 번 해싱을 할건지 입력해준다.
+
+## **Login**
+- login template
+```pug
+
+  //- login.pug
+
+  extends base.pug
+
+  block content
+    if (errorMessage)
+      span=errorMessage
+    form(method='POST')
+      input(placeholder='Username', name='username', type='text', required)
+      input(placeholder='Password', name='password', type='password', required)
+      input(type='submin', value='Login')
+    hr
+    div
+      span Don't have an accout? 
+      a(href='/join') Create one now &rrar;
+
+```
+
+- controller
+```js
+
+  // controller.js
+
+  import User from '../models/User';
+  import bcrypt from 'bcrypt';
+
+  export const getLogin = (req, res) => {
+    return res.render('login', { pageTitle: 'Login' })
+  }
+
+  export const postLogin = async(req, res) => {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    if(!user){
+      return res.status(400).render('login', { 
+        pageTitle: 'Login', 
+        errorMessage: 'An account with this username does not exists.' })
+    }
+    const ok = await bcrypt.compare(password, user.password)
+    if(!ok){
+      return res.status(400).render('login', { 
+        pageTitle: 'Login', 
+        errorMessage: 'Wrong password' })
+    }
+    res.redirect('/');
+  }
+  
+```
+
+- Router 변경
+```js
+
+  // router.js
+
+  import { getLogin, postLogin } from '../controllers/conroller.js';
+
+  Router.route('/login').get(getLogin).post(postLogin);
+
+```

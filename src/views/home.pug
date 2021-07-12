@@ -2,5 +2,10 @@ extends base.pug
 include mixins/video
 
 block content 
+    //- controller에서 받아온 videos배열을 반복문을 사용해 각각의 데이터를 mixin을 사용해 화면에 출력한다.
     each video in videos
+        //- videos mixin에 video를 넘겨준다.
         +videos(video)
+    else    
+        //- videos가 비어있는 경우 출력된다.
+        span No videos found
