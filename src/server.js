@@ -17,8 +17,10 @@ app.set("views", process.cwd() + "/src/views");
 
 // middleware
 app.use(logger);
+
 // request.body를 사용하기 위해 데이터 파싱
 app.use(express.urlencoded({ extended: true }));
+
 // Routing
 app.use("/", rootRouter);
 app.use("/users", userRouter);

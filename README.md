@@ -75,6 +75,8 @@
 - [코드 정리](#코드-정리)
 - [User Authentication](#user-authentication)
   - [User Model 생성](#user-model-생성)
+  - [password hash](#password-hash)
+    - [bcrypt 사용](#bcrypt-사용)
 
 
 # Requirements
@@ -1210,6 +1212,7 @@
       input(placeholder='Email', name='email', type='email', required)
       input(placeholder='Username', name='username', type='text', required)
       input(placeholder='Password', name='password', type='password', required)
+      input(placeholder='Confirm Password', name='password2', type='password', required)
       input(placeholder='Location', name='location', type='text', required)
       input(type='submin', value='Join')
 
@@ -1226,7 +1229,22 @@
   }
 
   export const postJoin = async(req, res) => {
-    const { email, username, password, name, location}
+    const { email, username, password, password2, name, location}
+    // exists메소드에 $or operator를 사용해 조건중 하나라도 true이면 true를 return한다.
+    const Exists = await User.exists({ $or: [{ username }, { email }] })
+
+    // 비밀번호와 확인 비밀번호가 같은지 확인
+    if(password !== password2){
+      // 에러를 출력하고 있는 걸 브라우저는 모르기 때문에 에러를 render할 때는 status메소드를 사용해 status code를 같이 응답해준다.
+      return res.status(400).render('join', { pageTitle: 'Join', errorMessage: 'Password confirmation does not match' })
+      // template에 에러메시지 표시를 위한 코드를 작성해준다.
+    }
+
+    if(Exists){
+      return res.status(400).render('join', { pageTitle: 'Join', errorMessage: 'This username/email is already  taken' })
+      // template에 에러메시지 표시를 위한 코드를 작성해준다.
+    }
+
     await User.create({
       email,
       username,
@@ -1250,3 +1268,34 @@
   Router.route('/join').get(getJoin).post(postJoin)
 
 ```
+## password hash
+###  bcrypt 사용
+- 단방향 암호화를 위해 만들어진 해시 함수
+- `npm install bcrypt` 설치
+```js
+
+  // models/User.js
+
+  import mongoose from 'mongoose';
+  import bcrypt from 'bcrypt';
+
+  const userSchema = new mongoose.Schema({
+    // unique는 유일한 값을 의미한다.
+    email: { type: String, required: true, unique: true },
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    name: { type: String, required: true },
+    location: String
+  }) 
+
+  userSchema.pre('save', async function(){
+    this.password = await bcrypt.hash(this.password, 5);
+  })
+
+  const User = mongoose.model('User', userSchema);
+
+  export default User;
+  
+```
+- .pre 메소드를 사용해 user를 저장하기 전에 password를 해싱해준다.
+- bcrypt.hash 함수에 해싱할 데이터를 넣고 몇 번 해싱을 할건지 입력해준다.
