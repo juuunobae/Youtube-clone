@@ -80,8 +80,9 @@
     - [bcrypt 사용](#bcrypt-사용)
   - [**Login**](#login)
   - [session & cookie](#session--cookie)
-    - [session](#session)
     - [cookie](#cookie)
+    - [session](#session)
+    - [Session Store](#session-store)
 
 
 # Requirements
@@ -1380,10 +1381,15 @@
 ```
 
 ## session & cookie
+### cookie
+- 사용자의 정보가 웹서버를 통해 사용자의 컴퓨터에 직접 저장되는 정보의 단위
+- session ID를 저장한다.
+
 ### session
 - 일정 시간동안 같은 사용자(브라우저)로 부터 들어오는 일련의 요구를 하나의 상태로 보고 그 상태를 일정하게 유지시키는 기술
   - 일정시간은 방문자가 웹브라우저를 통해 웹서버에 접속한 시점으로부터 웹브라우저를 종료하여 연결을 끝내는 시점
 - 방문자의 요청에 따른 정보를 웹서가 세션 아이디 파일을 만들어 서비스가 돌아가고 있는 웹서버에 저장하는 것이다.
+> [Session & Cookie](https://github.com/juuunobae/TIL/blob/main/Computer%20Science/Session%20%26%20Cookie.md)
 - `npm install express-session` 설치
   - express에서 session을 처리할 수 있게 해주는 미들웨어
 ```js
@@ -1400,7 +1406,75 @@
   }))
 
 ```
+- controller
+```js
+
+  // controller.js
+
+  export const postLogin = async(req, res) => {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    if(!user){
+      return res.status(400).render('login', { 
+        pageTitle: 'Login', 
+        errorMessage: 'An account with this username does not exists.' })
+    }
+    const ok = await bcrypt.compare(password, user.password)
+    if(!ok){
+      return res.status(400).render('login', { 
+        pageTitle: 'Login', 
+        errorMessage: 'Wrong password' })
+    }
+
+    req.session.loggedIn = true;
+    req.session.user = user;
+    // req.session.user에 로그인한 user 정보를 넣어주었기 때문에 모든 controller에서 사용할 수 있다.
+    
+    res.redirect('/');
+  }
+
+```
 - 방문자가 웹사이트에 방문하면 server에서 session ID를 만들어 브라우저로 보내주고, 브라우저는 쿠키에 session ID를 저장하고 server도 그 session ID를 session DB에 저장한다.
 - 브라우저가 해당 웹사이트의 모든 url에 요청을 보낼 때 마다 session ID를 요청과 함께 보낸다.
+  
+- 로그인 된 사용자에게만 보여질 template
+```pug
 
-### cookie
+  //- base.pug
+
+  if loggedIn
+    li
+      a(href='/logout') Logout
+  else
+    li 
+      a(href='/join') Join
+    li
+      a(href='/Login') Login
+
+```
+
+- template에서 req.session 객체를 사용하려면 locals 객체를 이용해 middleware를 만들어준다.
+  - locals는 pug에서 접근할 수 있는 객체이고, template에서 전역으로 변수를 사용할 수 있게 해준다.
+```js
+
+  // middlewares.js
+
+  export const localasMiddleware = (req, res, next) => {
+    // res.locals.[변수명] = [값]
+    res.locals.loggedIn = Boolean(req.session.loggedIn);
+    res.locals.siteName = 'Wetube';
+    next();
+  })
+
+
+  // server.js
+  
+  import { localsMiddleware } from './localasMiddleware'
+
+  app.use(localsMiddleware)
+ 
+```
+
+### Session Store
+- session을 저장하는 곳
+- 서버가 재식작되면 store도 재시작되기 때문에 브라우저가 가지고 있던 cookie는 유효하지 않게 되어버린다.
