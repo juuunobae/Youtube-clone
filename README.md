@@ -79,6 +79,9 @@
   - [password hash](#password-hash)
     - [bcrypt 사용](#bcrypt-사용)
   - [**Login**](#login)
+  - [session & cookie](#session--cookie)
+    - [session](#session)
+    - [cookie](#cookie)
 
 
 # Requirements
@@ -1220,7 +1223,7 @@
     hr
     div
       span Already have an accout? 
-      a(href='/login') Login &rrar;
+      a(href='/login') Login &rarr;
 
 ```
 - join controller
@@ -1330,7 +1333,7 @@
     hr
     div
       span Don't have an accout? 
-      a(href='/join') Create one now &rrar;
+      a(href='/join') Create one now &rarr;
 
 ```
 
@@ -1375,3 +1378,29 @@
   Router.route('/login').get(getLogin).post(postLogin);
 
 ```
+
+## session & cookie
+### session
+- 일정 시간동안 같은 사용자(브라우저)로 부터 들어오는 일련의 요구를 하나의 상태로 보고 그 상태를 일정하게 유지시키는 기술
+  - 일정시간은 방문자가 웹브라우저를 통해 웹서버에 접속한 시점으로부터 웹브라우저를 종료하여 연결을 끝내는 시점
+- 방문자의 요청에 따른 정보를 웹서가 세션 아이디 파일을 만들어 서비스가 돌아가고 있는 웹서버에 저장하는 것이다.
+- `npm install express-session` 설치
+  - express에서 session을 처리할 수 있게 해주는 미들웨어
+```js
+
+  // server.js
+
+  import session from 'express-session';
+
+  // router보다 먼저 초기화 해준다.
+  app.use(session({
+    secret: '',
+    resave: true,
+    saveUninitialized: true,
+  }))
+
+```
+- 방문자가 웹사이트에 방문하면 server에서 session ID를 만들어 브라우저로 보내주고, 브라우저는 쿠키에 session ID를 저장하고 server도 그 session ID를 session DB에 저장한다.
+- 브라우저가 해당 웹사이트의 모든 url에 요청을 보낼 때 마다 session ID를 요청과 함께 보낸다.
+
+### cookie
