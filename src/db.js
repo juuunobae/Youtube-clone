@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 // mongDB와 연결
 // 터미널에 mongo를 입력했을 때 나오는 url과 /database 이름
-mongoose.connect("mongodb://127.0.0.1:27017/wetube", {
+mongoose.connect(process.env.MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useFindAndModify: false,

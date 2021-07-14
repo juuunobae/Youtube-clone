@@ -17,9 +17,13 @@ html
                     li  
                         a(href='/search') Search
                     if(loggedIn)
+                        //- loggedIn이 true 일 때 = 로그인 상태일 때  실행
+                        li 
+                            a(href='/users/:id') #{user.name}의 profile
                         li 
                             a(href='/logout') Logout
                     else
+                        //- 로그인 상태가 아닐 때 실행
                         li 
                             a(href='/join') Join
                         li 

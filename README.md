@@ -73,6 +73,7 @@
 - [에러처리](#에러처리)
   - [async/await 에러](#asyncawait-에러)
 - [코드 정리](#코드-정리)
+  - [.env 환경변수](#env-환경변수)
 - [User Authentication](#user-authentication)
   - [**회원가입**](#회원가입)
     - [User Model 생성](#user-model-생성)
@@ -1179,6 +1180,39 @@
 
 ```
 
+## .env 환경변수
+- 어느 환경에 배포하느냐에 따라서 다르게 설정해야하는 항목은 보통 운영체제 레벨에서 환경 변수를 통해 관리하게 된다.
+- DB password나 API key와 같은 인증 정보는 공개된 코드 저장소에 올리면 안되기 때문에 환경 변수로 저장해놓고 사용하는 것이 일반적이다.
+- `npm install dotenv` 설치
+```js
+
+  //init.js
+
+  import 'dotenv/config';
+  // 서버가 실행될 때 제일 먼저 실행되게 import 해준다.
+
+```
+- package.json이 있는 폴더에 `.env` 파일 생성
+- .env 파일은 gitignore에 추가
+```env
+
+  # .env
+
+  DB_URL=mongodb://127.0.0.1:27017/wetube
+
+
+```
+- 대문자로 작성한다.
+```js
+
+  // .js
+
+  mongoose.connect(process.env.DB_URL, {});
+
+
+```
+- `process.env.[변수명]`
+
 # User Authentication
 ## **회원가입**
 ### User Model 생성
@@ -1384,6 +1418,8 @@
 ### cookie
 - 사용자의 정보가 웹서버를 통해 사용자의 컴퓨터에 직접 저장되는 정보의 단위
 - session ID를 저장한다.
+- Domain: 쿠키가 어디에서 왔는지, 어디로 가야하는지 알려주는 것
+- expires/max-age: 만료날짜
 
 ### session
 - 일정 시간동안 같은 사용자(브라우저)로 부터 들어오는 일련의 요구를 하나의 상태로 보고 그 상태를 일정하게 유지시키는 기술
@@ -1401,11 +1437,21 @@
   // router보다 먼저 초기화 해준다.
   app.use(session({
     secret: '',
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
   }))
 
 ```
+- secret: 쿠키에 서명, 해당 서버가 쿠키를 발급했다는 걸 인증하기 위함이다.
+- resave: 세션을 변경 사항 없이도 저장할 것인가
+- saveUninitialized: 세션을 초기화 전에도 저장할 것인가
+  - 로그인 된 사용자(브라우저)만 세션을 저장하려면 false
+  - 로그인이 되면서 session 객체가 변경이 되는데 그 때만 저장하겠다는 것이다.
+    - 객체가 변경되는 곳
+      - 로그인 post method controller
+      - `req.session.loggedIn = true; req.session.user = user;`
+
+  </br>
 - controller
 ```js
 
@@ -1434,7 +1480,7 @@
   }
 
 ```
-- 방문자가 웹사이트에 방문하면 server에서 session ID를 만들어 브라우저로 보내주고, 브라우저는 쿠키에 session ID를 저장하고 server도 그 session ID를 session DB에 저장한다.
+- 방문자가 웹사이트에 방문하면 server에서 session ID를 만들어 브라우저로 보내주고, 브라우저는 쿠키에 session ID만 저장하고 server도 그 session ID와 session data는 서버 session storage에 저장한다.
 - 브라우저가 해당 웹사이트의 모든 url에 요청을 보낼 때 마다 session ID를 요청과 함께 보낸다.
   
 - 로그인 된 사용자에게만 보여질 template
@@ -1477,4 +1523,23 @@
 
 ### Session Store
 - session을 저장하는 곳
+- 서버의 session storage는 실제 사용하기 위해 있는 건 아니다.
 - 서버가 재식작되면 store도 재시작되기 때문에 브라우저가 가지고 있던 cookie는 유효하지 않게 되어버린다.
+- 그렇기 때문에 session을 데이터베이스에 저장해야 한다.
+- `npm install connect-mongo` 설치
+  - mongoDB의 session store이다.
+```js
+
+  // server.js
+
+  import MongoStore frmo 'connect-mongo';
+
+  app.use(session({
+    secret: '',
+    resave: true,
+    saveUninitialized: true,
+    store: MongoStore.create({ mongo: '[mongoDB url]' })
+    // store에 session이 저장 될 곳을 설정해줄 수 있다.
+  }))
+
+```
