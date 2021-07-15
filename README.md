@@ -1418,30 +1418,26 @@
 ```
 
 ## social login
+- 모든 social login은 동작 방식이 비슷하다.
+
 ### github login
 - **동작 순서**
-1. 1
-2. 2
-3. 3
+1. 사용자를 github ID를 요청하도록 github로 redirect 시킨다.
+2. github는 사용자를 token과 함께 웹사이트로 다시 redirect 시킨다.
+3. 받아온 token으로 사용자 정보를 요청하고 받아온다.
 
 ### github login 실행
 - 우선 `https://github.com/settings/apps`으로 가서 `OAuth Apps`에 들어간다.
 - `new OAuth App`클릭 후 작성해준다.
   - callback URL에는 `http://localhost:4000/users/github/finish`라고 작성해준다.
-  - 아무 url이나 작성해도 되지만 사용해야 하는 url이기 때문에 기억할 수 있게 작성한다.
+    - github가 token과 사용자를 다시 redirect 시킬 때 callbake url이다.
+    - 아무 url이나 작성해도 되지만 사용해야 하는 url이기 때문에 기억할 수 있게 작성한다.
   - app을 만들면 clientID와 client secrets를 준다
-- github login router를 만들어준다.
-```js
+</br></br>
+  
 
-  // router.js
-
-  import { startGithubLogin, finishGithubLogin } from '../controllers/controller.js';
-
-  Router.get('/github/start', startGithubLogin)
-  Router.get('/github/finish', finishGithubLogin)
-
-```
-- 사용자를 github 페이지로 redirect 시키기 위해 login template에 링크를 만들어준다.
+- 사용자를 github 페이지로 redirect 시키기 위해 login template에 url링크를 만들어준다.
+  - parameters를 같이 보내줘야하는데 url이 길어지고 복잡해지기 때문에 로그인 링크를 router 경로로 설정해주고 controller에서 redirect 되게 한다.
 ```pug
 
   //- login.pug
@@ -1450,11 +1446,27 @@
   a(href='/users/github/start') Continue with Github &rarr;
 
 ```
+</br>
+
+- github login router를 만들어준다.
+```js
+
+  // router.js
+
+  import { startGithubLogin, finishGithubLogin } from '../controllers/controller.js';
+
+  Router.get('/github/start', startGithubLogin) // 사용자를 github로 redirect 시킬 router
+  Router.get('/github/finish', finishGithubLogin)
+
+```
+
 - 사용자를 github로 로그인 시키기 위한 controller
 - `.env` <= `CH_CLIENT=client_id` 
 - `.env` <= `CH_SECRET=client_secrets` 
+
 > nodeJS에서는 fetch가 동작하지 않기 때문에 모듈을 사용해야 한다.
 - `npm install node-fetch` 설치
+- githubID를 요청할 controller
 ```js
 
   // controller.js
@@ -1462,16 +1474,27 @@
   import fetch from 'node-fatch';
 
   export const startGithubLogin = (req, res) => {
-    const baseUrl = "https://github.com/login/oauth/authorize"
-    const config = {
+    const baseUrl = "https://github.com/login/oauth/authorize"; // 사용자의 githubID를 요청하는 기본 url
+    const config = { // parameters를 정의하는 객체
       client_id: process.env.GH_CLIENT,
       allow_signup: false,
       scope: "read:user user:email",
     }
-    const params = new URLSearchParams(config).toString();
-    const finalUrl = `${baseUrl}?${params}`;
+    const params = new URLSearchParams(config).toString(); // parameters를 url형식의 문자열로 변경
+    const finalUrl = `${baseUrl}?${params}`; // 
     return res.redirect(finalUrl);
   }
+```
+- **parameter**
+- config 객체에 담고, URLSearchParams().toString 메소드로 url로 변경해준다.
+  - client_id: github에서 OAuth Apps등록할 때 받은 clientId
+    - 필수 값이다.
+  - scope: github에 저장되어 있는 사용자의 어떤 정보를 공유할지 명시, 공백으로 구분한다.
+    - ex) `user`, `read:user`, `user:email` 등
+  - allow_signup: 계정이 없는 사용자들에게 계정 생성을 가능하게 할지의 여부
+  
+- `authorize`를 누르면 callback url로 redirect 되면서 `code`도 같이 보내준다.
+```js
 
   export const finishGithubLogin = async(req, res)  => {
     const baseUrl = "https://github.com/login/oauth/access_token"
@@ -1534,12 +1557,7 @@
   }
 
 ```
-- parameter
-  - client_id
-  - scope
-    - 사용자에게서 어떤 정보를 가지올 것인가
-  - allow_signup
-    - 계정 생성을 가능하게 할지의 여부
+
 
 
 ## session & cookie

@@ -86,6 +86,18 @@ export const postLogin = async (req, res) => {
   // 로그인이 성공적으로 완료되면 root 페이지로 redirect 시킨다.
 };
 
+export const startLoginGithub = (req, res) => {
+  const baseUrl = "https://github.com/login/oauth/authorize";
+  const config = {
+    client_id: process.env.GH_CLIENT,
+    allow_signup: false,
+    scope: "read:user user:email",
+  };
+  const params = new URLSearchParams(config).toString();
+  const finalUrl = `${baseUrl}?${params}`;
+  return res.redirect(finalUrl);
+};
+
 export const logout = (req, res) => res.send("Logout");
 
 export const see = (req, res) => res.send("See User");
