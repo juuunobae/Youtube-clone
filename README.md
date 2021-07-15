@@ -1456,7 +1456,7 @@
   import { startGithubLogin, finishGithubLogin } from '../controllers/controller.js';
 
   Router.get('/github/start', startGithubLogin) // 사용자를 github로 redirect 시킬 router
-  Router.get('/github/finish', finishGithubLogin)
+  Router.get('/github/finish', finishGithubLogin) // github에서 login 후 웹사이트로 돌아올 때 사용자를 처리할 router
 
 ```
 
@@ -1464,14 +1464,10 @@
 - `.env` <= `CH_CLIENT=client_id` 
 - `.env` <= `CH_SECRET=client_secrets` 
 
-> nodeJS에서는 fetch가 동작하지 않기 때문에 모듈을 사용해야 한다.
-- `npm install node-fetch` 설치
 - githubID를 요청할 controller
 ```js
 
   // controller.js
-
-  import fetch from 'node-fatch';
 
   export const startGithubLogin = (req, res) => {
     const baseUrl = "https://github.com/login/oauth/authorize"; // 사용자의 githubID를 요청하는 기본 url
@@ -1488,39 +1484,59 @@
 - **parameter**
 - config 객체에 담고, URLSearchParams().toString 메소드로 url로 변경해준다.
   - client_id: github에서 OAuth Apps등록할 때 받은 clientId
-    - 필수 값이다.
+    - 필수 값
   - scope: github에 저장되어 있는 사용자의 어떤 정보를 공유할지 명시, 공백으로 구분한다.
     - ex) `user`, `read:user`, `user:email` 등
   - allow_signup: 계정이 없는 사용자들에게 계정 생성을 가능하게 할지의 여부
-  
-- `authorize`를 누르면 callback url로 redirect 되면서 `code`도 같이 보내준다.
+  </br></br>
+
+- `authorize`를 누르면 callback url로 redirect 되면서 `code(req.query.code)`도 같이 보내준다.
+- github에서 받은 `code`를 `access_token`으로 바꿔주어야 한다.
+- access_token을 요쳥하는 url로 `parameter`들과 POST Request를 보내야 된다.
+- access_token으로 github API를 사용해 user 정보를 얻을 수 있다.
+- POST request를 보내기 위해서는 fetch를 사용한다.
+
+> nodeJS에서는 fetch가 동작하지 않기 때문에 모듈을 사용해야 한다.
+- `npm install node-fetch` 설치
 ```js
+
+  // controller.js
+
+  import fetch from 'node-fatch';
 
   export const finishGithubLogin = async(req, res)  => {
     const baseUrl = "https://github.com/login/oauth/access_token"
-    const confit = {
+    const config = {
       client_id: process.env.GH_CLIENT,
       client_secret: process.env.GH_SECRET,
       code: req.query.code,
     }
     const params = new URLSearchParams(config).toString();
     const finalUrl = `${baseUrl}?${params}`;
+
+    // 응답받은 code로 access token을 얻을 수 있는 요청
     const tokenRequest = awiat (await fetch(finalUrl, {
       method: 'POST',
       headers: {
-        Accept: 'application/json'
+        Accept: 'application/json',
+        // JSON을 return 받기 위해서 headers에 해당 코드를 보내야 한다.
       }
-    })).json();
+    })).json(); // fetch로 요청을 하면 해당 fetch의 JSON으로 응답이 온다.
+    
+    // code로 요청해 응답받은 객체안에 access token이 있으면 실행
     if('access_token' in tokenRequest){
-      const { access_toket } = tokenRequest;
-      const apiUrl = "https://api.github.com"
+      const { access_token } = tokenRequest;
+      const apiUrl = "https://api.github.com" // access token을 이용해 github API로 가는 url
 
+      // access token으로 github API URL을 fetch, user 정보를 가지고 온다.
       const userData = await (await fetch(`${apiUrl}/user`, {
+        // 인증을 위한 access token을 보내주어야 한다.
         headers: {
-          Authorization: `token ${access_token}`
+          Authorization: `token ${access_token}`, 
         }
-      })).json()
+      })).json();
 
+      // access token으로 github API URL을 fetch, user의 모든 email 정보를 가지고 온다.
       const emailData = await(await fetch(`${apiUrl}/user/emails`, {
         headers: {
           Authorization: `token ${access_token}`
@@ -1528,22 +1544,30 @@
       
       })).json();
 
+      // 가지고 온 모든 email 객체 중에 find의 조건에 맞는 email만 변수에 저장한다.
       const emailObj = emailData.find(email => email.primary === true && email.verified === true);
+
+      // 찾는 email이 없을 경우 실행
       if(!emailObj) {
         return res.redirect('/login')
       }
+
+      // github email과 동일한 email을 가진 user를 불러와 변수에 저장
       const existingUser = await User.findOne({ email: emailObj.email })
+
+      // github email과 같은 email을 가진 user가 있으면 실행되고 해당 유저를 login 시킨다.
       if(existingUser){
         req.session.loggedIn = true
         req.session.user = existingUser
         return res.redirect('/')
       }else {
+        // github의 email과 같은 email을 가진 user가 없으면 새로운 user model을 생성해준다.
         const user = await User.create({
           name: userData.name,
           username: userData.login,
           email: emailObj.email,
-          password: '',
           location:userData.location,
+          password: '',
           socialOnly: true
         })
         req.session.loggedIn = true
@@ -1557,8 +1581,30 @@
   }
 
 ```
+- **parameter**
+- config 객체에 담고, URLSearchParams().toString 메소드로 url로 변경해준다.
+  - client_id: github에서 OAuth Apps등록할 때 받은 clientId
+    - 필수 값
+  - client_secret: 
+    - 필수 값
+  - code: 
+    - 필수 값
+  </br></br>
 
+- Schema 수정
+```js
 
+  // User.js
+
+  const userSchema = new mongoose.Schema({
+    socialOnly: { type: Boolean, default: false }, // 추가
+    password: { type: String }, 
+    // social login을 하면 password는 필요없기 때문에 required 옵션을 지운다.
+});
+
+```
+
+  
 
 ## session & cookie
 ### cookie
