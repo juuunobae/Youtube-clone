@@ -56,7 +56,9 @@ export const getLogin = (req, res) => {
 // login post method
 export const postLogin = async (req, res) => {
   const { username, password } = req.body; // 사용자가 form으로 요청한 데이터
-  const user = await User.findOne({ username }); // 사용자가 입력한 username과 같은 데이터가 있는 model을 불러와 user에 저장
+  const user = await User.findOne({ username, socialOnly: false });
+  // password가 없는 social로만 가입한 사람들을 걸러내기 위해 socialOnly가 false인 사용자만 password로 로그인이 가능하게 해주어야 한다.
+  // socialOnly가 false이면서 사용자가 입력한 username과 같은 데이터가 있는 model을 불러와 user에 저장
   if (!user) {
     // username을 찾지 못했을 시
     return res.status(400).render("login", {
@@ -144,13 +146,10 @@ export const finishLoginGithub = async (req, res) => {
     if (!emailObj) {
       return res.redirect("/login");
     }
-    const existing = await User.findOne({ email: emailObj.email });
-    if (existing) {
-      req.session.loggedIn = true;
-      req.session.user = existing;
-      return res.redirect("/");
-    } else {
+    let user = await User.findOne({ email: emailObj.email });
+    if (!user) {
       const user = await User.create({
+        avatarUrl: userData.avatar_url,
         username: userData.login,
         name: userData.name,
         email: emailObj.email,
@@ -158,15 +157,19 @@ export const finishLoginGithub = async (req, res) => {
         socialOnly: true,
         location: userData.location,
       });
-      req.session.loggedIn = true;
-      req.session.user = user;
-      return res.redirect("/");
     }
+
+    req.session.loggedIn = true;
+    req.session.user = user;
+    return res.redirect("/");
   } else {
     return res.redirect("/login");
   }
 };
 
-export const logout = (req, res) => res.send("Logout");
+export const logout = (req, res) => {
+  req.session.destroy();
+  return res.redirect("/");
+};
 
 export const see = (req, res) => res.send("See User");

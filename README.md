@@ -80,13 +80,14 @@
   - [password hash](#password-hash)
     - [bcrypt 사용](#bcrypt-사용)
   - [**Login**](#login)
-  - [social login](#social-login)
-    - [github login](#github-login)
-    - [github login 실행](#github-login-실행)
   - [session & cookie](#session--cookie)
     - [cookie](#cookie)
     - [session](#session)
     - [Session Store](#session-store)
+  - [social login](#social-login)
+    - [github login](#github-login)
+    - [github login 실행](#github-login-실행)
+  - [logout](#logout)
 
 
 # Requirements
@@ -1415,6 +1416,136 @@
 
   Router.route('/login').get(getLogin).post(postLogin);
 
+```  
+
+## session & cookie
+### cookie
+- 사용자의 정보가 웹서버를 통해 사용자의 컴퓨터에 직접 저장되는 정보의 단위
+- session ID를 저장한다.
+- Domain: 쿠키가 어디에서 왔는지, 어디로 가야하는지 알려주는 것
+- expires/max-age: 만료날짜
+
+### session
+- 일정 시간동안 같은 사용자(브라우저)로 부터 들어오는 일련의 요구를 하나의 상태로 보고 그 상태를 일정하게 유지시키는 기술
+  - 일정시간은 방문자가 웹브라우저를 통해 웹서버에 접속한 시점으로부터 웹브라우저를 종료하여 연결을 끝내는 시점
+- 방문자의 요청에 따른 정보를 웹서가 세션 아이디 파일을 만들어 서비스가 돌아가고 있는 웹서버에 저장하는 것이다.
+> [Session & Cookie](https://github.com/juuunobae/TIL/blob/main/Computer%20Science/Session%20%26%20Cookie.md)
+- `npm install express-session` 설치
+  - express에서 session을 처리할 수 있게 해주는 미들웨어
+```js
+
+  // server.js
+
+  import session from 'express-session';
+
+  // router보다 먼저 초기화 해준다.
+  app.use(session({
+    secret: '',
+    resave: false,
+    saveUninitialized: false,
+  }))
+
+```
+- secret: 쿠키에 서명, 해당 서버가 쿠키를 발급했다는 걸 인증하기 위함이다.
+- resave: 세션을 변경 사항 없이도 저장할 것인가
+- saveUninitialized: 세션을 초기화 전에도 저장할 것인가
+  - 로그인 된 사용자(브라우저)만 세션을 저장하려면 false
+  - 로그인이 되면서 session 객체가 변경이 되는데 그 때만 저장하겠다는 것이다.
+    - 객체가 변경되는 곳
+      - 로그인 post method controller
+      - `req.session.loggedIn = true; req.session.user = user;`
+
+  </br>
+- controller
+```js
+
+  // controller.js
+
+  export const postLogin = async(req, res) => {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    if(!user){
+      return res.status(400).render('login', { 
+        pageTitle: 'Login', 
+        errorMessage: 'An account with this username does not exists.' })
+    }
+    const ok = await bcrypt.compare(password, user.password)
+    if(!ok){
+      return res.status(400).render('login', { 
+        pageTitle: 'Login', 
+        errorMessage: 'Wrong password' })
+    }
+
+    req.session.loggedIn = true;
+    req.session.user = user;
+    // req.session.user에 로그인한 user 정보를 넣어주었기 때문에 모든 controller에서 사용할 수 있다.
+    
+    res.redirect('/');
+  }
+
+```
+- 방문자가 웹사이트에 방문하면 server에서 session ID를 만들어 브라우저로 보내주고, 브라우저는 쿠키에 session ID만 저장하고 server도 그 session ID와 session data는 서버 session storage에 저장한다.
+- 브라우저가 해당 웹사이트의 모든 url에 요청을 보낼 때 마다 session ID를 요청과 함께 보낸다.
+  
+- 로그인 된 사용자에게만 보여질 template
+```pug
+
+  //- base.pug
+
+  if loggedIn
+    li
+      a(href='/logout') Logout
+  else
+    li 
+      a(href='/join') Join
+    li
+      a(href='/Login') Login
+
+```
+
+- template에서 req.session 객체를 사용하려면 locals 객체를 이용해 middleware를 만들어준다.
+  - locals는 pug에서 접근할 수 있는 객체이고, template에서 전역으로 변수를 사용할 수 있게 해준다.
+```js
+
+  // middlewares.js
+
+  export const localasMiddleware = (req, res, next) => {
+    // res.locals.[변수명] = [값]
+    res.locals.loggedIn = Boolean(req.session.loggedIn);
+    res.locals.siteName = 'Wetube';
+    next();
+  })
+
+
+  // server.js
+  
+  import { localsMiddleware } from './localasMiddleware'
+
+  app.use(localsMiddleware)
+ 
+```
+
+### Session Store
+- session을 저장하는 곳
+- 서버의 session storage는 실제 사용하기 위해 있는 건 아니다.
+- 서버가 재식작되면 store도 재시작되기 때문에 브라우저가 가지고 있던 cookie는 유효하지 않게 되어버린다.
+- 그렇기 때문에 session을 데이터베이스에 저장해야 한다.
+- `npm install connect-mongo` 설치
+  - mongoDB의 session store이다.
+```js
+
+  // server.js
+
+  import MongoStore from 'connect-mongo';
+
+  app.use(session({
+    secret: '',
+    resave: true,
+    saveUninitialized: true,
+    store: MongoStore.create({ mongo: '[mongoDB url]' })
+    // store에 session이 저장 될 곳을 설정해줄 수 있다.
+  }))
+
 ```
 
 ## social login
@@ -1553,16 +1684,13 @@
       }
 
       // github email과 동일한 email을 가진 user를 불러와 변수에 저장
-      const existingUser = await User.findOne({ email: emailObj.email })
+      const user = await User.findOne({ email: emailObj.email })
 
       // github email과 같은 email을 가진 user가 있으면 실행되고 해당 유저를 login 시킨다.
-      if(existingUser){
-        req.session.loggedIn = true
-        req.session.user = existingUser
-        return res.redirect('/')
-      }else {
+      if(!user){
         // github의 email과 같은 email을 가진 user가 없으면 새로운 user model을 생성해준다.
-        const user = await User.create({
+        user = await User.create({
+          avatarUrl: userData.avatar_url,
           name: userData.name,
           username: userData.login,
           email: emailObj.email,
@@ -1570,10 +1698,11 @@
           password: '',
           socialOnly: true
         })
-        req.session.loggedIn = true
-        req.session.user = user
-        return res.redirect('/')
       }
+
+      req.session.loggedIn = true
+      req.session.user = user
+      return res.redirect('/')
 
     } else {
       return res.redirect('/login')
@@ -1598,60 +1727,19 @@
 
   const userSchema = new mongoose.Schema({
     socialOnly: { type: Boolean, default: false }, // 추가
+    avatarUrl: String, // 추가
     password: { type: String }, 
     // social login을 하면 password는 필요없기 때문에 required 옵션을 지운다.
 });
 
 ```
 
-  
-
-## session & cookie
-### cookie
-- 사용자의 정보가 웹서버를 통해 사용자의 컴퓨터에 직접 저장되는 정보의 단위
-- session ID를 저장한다.
-- Domain: 쿠키가 어디에서 왔는지, 어디로 가야하는지 알려주는 것
-- expires/max-age: 만료날짜
-
-### session
-- 일정 시간동안 같은 사용자(브라우저)로 부터 들어오는 일련의 요구를 하나의 상태로 보고 그 상태를 일정하게 유지시키는 기술
-  - 일정시간은 방문자가 웹브라우저를 통해 웹서버에 접속한 시점으로부터 웹브라우저를 종료하여 연결을 끝내는 시점
-- 방문자의 요청에 따른 정보를 웹서가 세션 아이디 파일을 만들어 서비스가 돌아가고 있는 웹서버에 저장하는 것이다.
-> [Session & Cookie](https://github.com/juuunobae/TIL/blob/main/Computer%20Science/Session%20%26%20Cookie.md)
-- `npm install express-session` 설치
-  - express에서 session을 처리할 수 있게 해주는 미들웨어
+- Login controller 수정
 ```js
-
-  // server.js
-
-  import session from 'express-session';
-
-  // router보다 먼저 초기화 해준다.
-  app.use(session({
-    secret: '',
-    resave: false,
-    saveUninitialized: false,
-  }))
-
-```
-- secret: 쿠키에 서명, 해당 서버가 쿠키를 발급했다는 걸 인증하기 위함이다.
-- resave: 세션을 변경 사항 없이도 저장할 것인가
-- saveUninitialized: 세션을 초기화 전에도 저장할 것인가
-  - 로그인 된 사용자(브라우저)만 세션을 저장하려면 false
-  - 로그인이 되면서 session 객체가 변경이 되는데 그 때만 저장하겠다는 것이다.
-    - 객체가 변경되는 곳
-      - 로그인 post method controller
-      - `req.session.loggedIn = true; req.session.user = user;`
-
-  </br>
-- controller
-```js
-
-  // controller.js
 
   export const postLogin = async(req, res) => {
     const { username, password } = req.body;
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ username, socialOnly: false });
     if(!user){
       return res.status(400).render('login', { 
         pageTitle: 'Login', 
@@ -1672,66 +1760,29 @@
   }
 
 ```
-- 방문자가 웹사이트에 방문하면 server에서 session ID를 만들어 브라우저로 보내주고, 브라우저는 쿠키에 session ID만 저장하고 server도 그 session ID와 session data는 서버 session storage에 저장한다.
-- 브라우저가 해당 웹사이트의 모든 url에 요청을 보낼 때 마다 session ID를 요청과 함께 보낸다.
-  
-- 로그인 된 사용자에게만 보여질 template
-```pug
+- social로만 가입을 했을 시에는 database에 password가 없기 때문에 사용자가 모르고 database에 있는 social email과 같은 email로 일반 로그인을 한다고 했을 때는 password로 로그인을 할 수가 없다.
+- 이런 사용자가 username과 password로 로그인을 시도하면 socialOnly가 false이면서 사용자가 입력한 username과 같은 user model을 database에서 찾아보고 model이 존재하면 로그인 시킨다.
 
-  //- base.pug
-
-  if loggedIn
-    li
-      a(href='/logout') Logout
-  else
-    li 
-      a(href='/join') Join
-    li
-      a(href='/Login') Login
-
-```
-
-- template에서 req.session 객체를 사용하려면 locals 객체를 이용해 middleware를 만들어준다.
-  - locals는 pug에서 접근할 수 있는 객체이고, template에서 전역으로 변수를 사용할 수 있게 해준다.
+## logout
+- 페이지를 render할 필요 없이 logout 과정을 거치고 home으로 redirect 시킨다.
+- `req.session.destroy()`를 사용해 session을 없앤다.
 ```js
 
-  // middlewares.js
+  // controller.js
 
-  export const localasMiddleware = (req, res, next) => {
-    // res.locals.[변수명] = [값]
-    res.locals.loggedIn = Boolean(req.session.loggedIn);
-    res.locals.siteName = 'Wetube';
-    next();
-  })
+  export const logout = (req, res) => {
+    req.session.destroy();
+    return res.redirect('/');
+  }
 
-
-  // server.js
-  
-  import { localsMiddleware } from './localasMiddleware'
-
-  app.use(localsMiddleware)
- 
 ```
-
-### Session Store
-- session을 저장하는 곳
-- 서버의 session storage는 실제 사용하기 위해 있는 건 아니다.
-- 서버가 재식작되면 store도 재시작되기 때문에 브라우저가 가지고 있던 cookie는 유효하지 않게 되어버린다.
-- 그렇기 때문에 session을 데이터베이스에 저장해야 한다.
-- `npm install connect-mongo` 설치
-  - mongoDB의 session store이다.
+- Router
 ```js
 
-  // server.js
+  // router.js
 
-  import MongoStore from 'connect-mongo';
+  import { logout } from '../cotrollers/controller.js';
 
-  app.use(session({
-    secret: '',
-    resave: true,
-    saveUninitialized: true,
-    store: MongoStore.create({ mongo: '[mongoDB url]' })
-    // store에 session이 저장 될 곳을 설정해줄 수 있다.
-  }))
+  Router.get('/logout', logout)
 
 ```
