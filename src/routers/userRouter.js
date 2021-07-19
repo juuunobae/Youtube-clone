@@ -1,18 +1,20 @@
 import express from "express";
 import {
-  edit,
   finishLoginGithub,
+  getEdit,
   logout,
+  postEdit,
   see,
   startLoginGithub,
 } from "../controllers/userController";
+import { protectorMiddleware, publicMiddleware } from "../middlewares";
 
 const userRouter = express.Router();
 
-userRouter.get("/logout", logout); // localhost:4000/users/login
+userRouter.get("/logout", protectorMiddleware, logout); // localhost:4000/users/login
+userRouter.route("/edit").all(protectorMiddleware).get(getEdit).post(postEdit); // localhost:4000/users/:id/edit
+userRouter.get("/github/start", publicMiddleware, startLoginGithub);
+userRouter.get("/github/finish", publicMiddleware, finishLoginGithub);
 userRouter.get("/:id", see); // localhost:4000/users/:id (id = 각 model의 id가 들어갈 변수)
-userRouter.get("/:id/edit", edit); // localhost:4000/users/:id/edit
-userRouter.get("/github/start", startLoginGithub);
-userRouter.get("/github/finish", finishLoginGithub);
 
 export default userRouter;

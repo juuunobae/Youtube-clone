@@ -26,7 +26,7 @@ export const postJoin = async (req, res) => {
     // 에러 status 코드와 에러메시지를 보내고 페이지를 새로 rendering
     return res.status(400).render("join", {
       pageTitle: "Join",
-      errorMessage: "This username/email is already  taken",
+      errorMessage: "This username/email is already taken",
     });
   }
 
@@ -42,10 +42,6 @@ export const postJoin = async (req, res) => {
   // 회원가입이 성공적으로 완료되면 login하는 페이지로 redirect 시킨다.
   return res.redirect("/login");
 };
-
-export const edit = (req, res) => res.send("Edit");
-
-export const remove = (req, res) => res.send("Remove");
 
 // login get method
 export const getLogin = (req, res) => {
@@ -170,6 +166,32 @@ export const finishLoginGithub = async (req, res) => {
 export const logout = (req, res) => {
   req.session.destroy();
   return res.redirect("/");
+};
+
+export const getEdit = (req, res) => {
+  return res.render("edit-profile", { pageTitle: "Edit Profile" });
+};
+
+export const postEdit = async (req, res) => {
+  const {
+    session: {
+      user: { _id, email: sessionEmail, username: sessionUsername },
+    },
+    body: { name, email, username, location },
+  } = req;
+
+  const editUser = await User.findByIdAndUpdate(
+    _id,
+    {
+      name,
+      email,
+      username,
+      location,
+    },
+    { new: true }
+  );
+  req.session.user = editUser;
+  return res.redirect("/users/edit");
 };
 
 export const see = (req, res) => res.send("See User");

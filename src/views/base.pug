@@ -12,14 +12,14 @@ html
                 ul 
                     li 
                         a(href='/') Home
-                    li 
-                        a(href='/videos/upload') Upolad Video
                     li  
                         a(href='/search') Search
                     if(loggedIn)
                         //- loggedIn이 true 일 때 = 로그인 상태일 때  실행
                         li 
-                            a(href='/users/:id') #{user.name}의 profile
+                            a(href='/videos/upload') Upolad Video
+                        li 
+                            a(href='/users/edit') Edit Profile
                         li 
                             a(href='/users/logout') Logout
                     else
