@@ -180,6 +180,16 @@ export const postEdit = async (req, res) => {
     body: { name, email, username, location },
   } = req;
 
+  if (sessionEmail !== email || sessionUsername !== username) {
+    const findUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (findUser && findUser._id !== _id) {
+      return res.status(400).render("edit-profile", {
+        pageTitle: "Edit Profile",
+        errorMessage: "This username/email is already taken",
+      });
+    }
+  }
+
   const editUser = await User.findByIdAndUpdate(
     _id,
     {
@@ -194,4 +204,37 @@ export const postEdit = async (req, res) => {
   return res.redirect("/users/edit");
 };
 
+export const getChangePasswored = (req, res) => {
+  return res.render("change-password", { pageTitle: "Change Password" });
+};
+
+export const postChangePassword = async (req, res) => {
+  const {
+    session: {
+      user: { _id, password },
+    },
+    body: { currentPassword, newPassword, passwordConfirmation },
+  } = req;
+
+  const ok = await bcrypt.compare(currentPassword, password);
+
+  if (!ok) {
+    return res.status(400).render("change-password", {
+      pageTitle: "Change Password",
+      errorMessage: "The current password is incorrect",
+    });
+  }
+
+  if (newPassword !== passwordConfirmation) {
+    return res.status(400).render("change-password", {
+      pageTitle: "Change Password",
+      errorMessage: "The password does not match the confimation",
+    });
+  }
+  const user = await User.findOne({ _id });
+  user.password = newPassword;
+  await user.save();
+  req.session.user.password = user.password;
+  res.redirect("/users/logout");
+};
 export const see = (req, res) => res.send("See User");
