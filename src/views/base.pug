@@ -18,6 +18,8 @@ html
                         //- loggedIn이 true 일 때 = 로그인 상태일 때  실행
                         li 
                             a(href='/videos/upload') Upolad Video
+                        li
+                            a(href=`/users/${loggedInUser._id}`) My profile
                         li 
                             a(href='/users/edit') Edit Profile
                         li 

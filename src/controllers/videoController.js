@@ -82,6 +82,7 @@ export const getUpload = (req, res) => {
 
 // 비디오 생성 post 요청 form 처리
 export const postUpload = async (req, res) => {
+  const { path: fileUrl } = req.file;
   const { title, description, hashtags } = req.body; // 사용자가 form으로 요청한 데이터
 
   // model 생성시 생길 에러를 대비해 try/catch문 사용
@@ -89,6 +90,7 @@ export const postUpload = async (req, res) => {
     // form에서 받은 데이터로 model을 생성하고 데이터베이스에 저장한다.
     await Video.create({
       title,
+      fileUrl,
       description,
       hashtags: Video.formatHashtags(hashtags), // 직접 만든 static 함수로 hashtags에 '#'붙여주기
     });
