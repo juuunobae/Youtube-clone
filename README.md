@@ -12,3 +12,5 @@
 - [에러처리](https://github.com/juuunobae/instruction/blob/master/NodeJS%2C%20Express%2C%20MongoDB%2C%20ES6/%EC%97%90%EB%9F%AC%EC%B2%98%EB%A6%AC.md)
 - [코드정리](https://github.com/juuunobae/instruction/blob/master/NodeJS%2C%20Express%2C%20MongoDB%2C%20ES6/%EC%BD%94%EB%93%9C%EC%A0%95%EB%A6%AC.md)
 - [User Authentication](https://github.com/juuunobae/instruction/blob/master/NodeJS%2C%20Express%2C%20MongoDB%2C%20ES6/UserAuthentication.md)
+- [File Upload](https://github.com/juuunobae/instruction/blob/master/NodeJS%2C%20Express%2C%20MongoDB%2C%20ES6/File%20Upload.md)
+- [Model Connect](https://github.com/juuunobae/instruction/blob/master/NodeJS%2C%20Express%2C%20MongoDB%2C%20ES6/Model%20Conect.md)
