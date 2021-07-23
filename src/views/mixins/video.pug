@@ -3,7 +3,7 @@ mixin videos(video)
     //- mixin의 이름은 videos이고, video는 template(home.put, search,pug)에서 넘겨받은 파라미터이다
     div
         h4 
-            a(href=`videos/${video.id}`)=video.title 
+            a(href=`/videos/${video.id}`)=video.title 
         p=video.description
         small=video.createdAt
         ul  

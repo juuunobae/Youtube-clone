@@ -1,3 +1,10 @@
 extends base
+include mixins/video
 
 block content
+    each video in user.videos
+        //- videos mixin에 video를 넘겨준다.
+        +videos(video)
+    else    
+        //- videos가 비어있는 경우 출력된다.
+        span sorry nothing found

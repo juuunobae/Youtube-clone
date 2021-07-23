@@ -85,80 +85,105 @@ export const postLogin = async (req, res) => {
   // 로그인이 성공적으로 완료되면 root 페이지로 redirect 시킨다.
 };
 
+// github에 사용자 정보를 요청할 때 실행되는 controller
 export const startLoginGithub = (req, res) => {
-  const baseUrl = "https://github.com/login/oauth/authorize";
+  const baseUrl = "https://github.com/login/oauth/authorize"; // 사용자를 github의 로그인 페이지로 redirect 시키는 기본 url
+
+  // parametes를 정의하는 객체
+  // ID를 요청하면서 같이 보낼 데이터들
   const config = {
-    client_id: process.env.GH_CLIENT,
-    allow_signup: false,
-    scope: "read:user user:email",
+    client_id: process.env.GH_CLIENT, // github app을 생성할 때 받은 id
+    allow_signup: false, // 회원가입 불가
+    scope: "read:user user:email", // user정보와 user의 email정보를 요청
   };
-  const params = new URLSearchParams(config).toString();
-  const finalUrl = `${baseUrl}?${params}`;
-  return res.redirect(finalUrl);
+
+  const params = new URLSearchParams(config).toString(); // config 객체를 url로 정보를 보낼 수 있게 만들어준다.
+  const finalUrl = `${baseUrl}?${params}`; // 기본 url과 parameters url을 합쳐 사용자 정보를 요청할 최종 url
+  return res.redirect(finalUrl); // 현재 controller가 실행될 router 경로로 사용자가 들어오면 최종 url로 redirect
 };
 
+// 사용자가 github에 로그인하고 해당 정보를 가지고 callback url로 돌아오면 실행될 controller
 export const finishLoginGithub = async (req, res) => {
-  const baseUrl = "https://github.com/login/oauth/access_token";
+  // 사용자가 돌아오면서 github에서 준 code도 같이 온다.
+  // 받아온 코드로 github에 접근할 수 있는 access token을 받아야 된다.
+  const baseUrl = "https://github.com/login/oauth/access_token"; // access token을 요청하는 기본 url
+
+  // parametes를 정의하는 객체
+  // access token을 요청하면서 같이 보낼 데이터들
   const config = {
     client_id: process.env.GH_CLIENT,
     client_secret: process.env.GH_SECRET,
-    code: req.query.code,
+    code: req.query.code, // access token을 요청할 code
   };
-  const params = new URLSearchParams(config).toString();
-  const finalUrl = `${baseUrl}?${params}`;
 
+  const params = new URLSearchParams(config).toString(); // config 객체를 url로 정보를 보낼 수 있게 만들어준다.
+  const finalUrl = `${baseUrl}?${params}`; // 기본 url과 parameters url을 합쳐 access token을 요청할 최종 url
+
+  // access token을 받기 위한 fetch 요청
   const tokenRequest = await (
     await fetch(finalUrl, {
-      method: "POST",
+      method: "POST", // POST method로 요청
       headers: {
-        Accept: "application/json",
+        Accept: "application/json", // JSON으로 응답받기 위해 headers에 넣어서 요청
       },
     })
-  ).json();
+  ).json(); // 응답담은 JSON을 tokenRequest에 저장
 
+  // tokenRequest에 "access_token"가 있으면 실행
   if ("access_token" in tokenRequest) {
-    const apiUrl = "https://api.github.com";
-    const { access_token } = tokenRequest;
+    const { access_token } = tokenRequest; //tokenRequest안에 있는 access_token
+    const apiUrl = "https://api.github.com"; // github API를 요청하는 url
 
+    // user정보에 대한 github API를 요청하는 fetch
     const userData = await (
       await fetch(`${apiUrl}/user`, {
         headers: {
-          Authorization: `token ${access_token}`,
+          Authorization: `token ${access_token}`, // 받아온 access token을 headers에 넣어서 요청
         },
       })
-    ).json();
+    ).json(); // 응답담은 JSON을 userData에 저장
 
+    // user의 email 정보에 대한 github API를 요청하는 fetch
     const emailData = await (
       await fetch(`${apiUrl}/user/emails`, {
         headers: {
-          Authorization: `token ${access_token}`,
+          Authorization: `token ${access_token}`, // 받아온 access token을 headers에 넣어서 요청
         },
       })
-    ).json();
+    ).json(); // 응답담은 JSON을 emailData에 저장
 
+    // 응답받은 emailData중에 해당하는 값만 찾아서 emailObj에 저장
     const emailObj = emailData.find(
       (email) => email.primary === true && email.verified === true
     );
+
+    // 찾는 값이 없으면 실행
     if (!emailObj) {
       return res.redirect("/login");
     }
+
+    // github의 email과 같은 email의 user를 데이터베이스에서 찾고 user에 저장
     let user = await User.findOne({ email: emailObj.email });
+
+    // 같은 email의 user가 없으면 실행
     if (!user) {
-      const user = await User.create({
+      // User model을 새로 생성해준다.
+      user = await User.create({
         avatarUrl: userData.avatar_url,
         username: userData.login,
         name: userData.name,
         email: emailObj.email,
-        password: "",
-        socialOnly: true,
+        password: "", // github로 로그인하면 비밀번호가 없기 때문에 비워놓는다.
+        socialOnly: true, // 비밀번호 변경 링크를 보여주지 않기 위해 체크
         location: userData.location,
       });
     }
 
-    req.session.loggedIn = true;
-    req.session.user = user;
+    req.session.loggedIn = true; // session 객체에 로그인이 되었다고 loggedIn = true로 알려준다.
+    req.session.user = user; // session 객체에 로그인이 된 user 정보를 추가해준다.
     return res.redirect("/");
   } else {
+    // user가 있다면 이미 생성된 같은 email이 있기 때문에 새로 생성할 필요가 없다.
     return res.redirect("/login");
   }
 };
@@ -242,9 +267,9 @@ export const postChangePassword = async (req, res) => {
 
 export const see = async (req, res) => {
   const { id } = req.params;
-  const user = await User.findById(id);
+  const user = await User.findById(id).populate("videos");
   if (!user) {
     return res.status(404).render("404", { pageTitle: "User not found" });
   }
-  return res.render("profile", { pageTitle: `${user.name} Profile`, user });
+  return res.render("profile", { pageTitle: user.name, user });
 };
