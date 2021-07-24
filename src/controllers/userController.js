@@ -188,27 +188,39 @@ export const finishLoginGithub = async (req, res) => {
   }
 };
 
+// 로그아웃 controller
 export const logout = (req, res) => {
+  // destroy 메소드로 session을 삭제해준다.
   req.session.destroy();
   return res.redirect("/");
 };
 
+// user edit get method
 export const getEdit = (req, res) => {
   return res.render("edit-profile", { pageTitle: "Edit Profile" });
 };
 
+// user edit post method
 export const postEdit = async (req, res) => {
   const {
     session: {
       user: { _id, avatarUrl, email: sessionEmail, username: sessionUsername },
-    },
-    body: { name, email, username, location },
-    file,
+    }, // 로그인 되어있는 사용자의 정보들
+    body: { name, email, username, location }, // form으로 요청 받은 사용자 데이터
+    file, // multer에서 넘겨 받은 file 객체
   } = req;
 
+  // 로그인된 사용자의 기존 email이나 username과 다른 값이 form 요청으로 들어왔을 때 실행
+  // 즉, 사용자가 email이나 username을 바꾸려고 할 때 실행된다.
   if (sessionEmail !== email || sessionUsername !== username) {
-    const findUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (findUser && findUser._id !== _id) {
+    // 데이터베이스에서 form에 입력된 email이나 username이 사용되고 있는 user 객체를 찾아서 findUser에 저장한다.
+    const findUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
+    // 찾은 user가 있고 이 user ID와 session의 id가 다르면 실행
+    // 바꾸려는 email이나 username이 이미 데이터베이스에 있으면 변경할 수 없다.
+    // 바꾸려는 email이나 username을 가지고 있는 findUser가 현재 로그인 되어있는 사용자가 아니라면(id다르면) 에러 메시지를 띄운다.
+    if (findUser && String(findUser._id) !== _id) {
       return res.status(400).render("edit-profile", {
         pageTitle: "Edit Profile",
         errorMessage: "This username/email is already taken",
@@ -228,6 +240,7 @@ export const postEdit = async (req, res) => {
     { new: true }
   );
   req.session.user = editUser;
+
   return res.redirect("/users/edit");
 };
 
