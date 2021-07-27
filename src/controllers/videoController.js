@@ -28,7 +28,7 @@ export const watch = async (req, res) => {
   const video = await Video.findById(id).populate("owner"); // 받아온 id로 그와 일치하는 비디오를 데이터베이스에서 찾아 video 변수에 저장
   // id와 일치하는 video가 없을 때
   // url을 임의로 바꿨을 때
-  console.log(video.owner._id);
+  console.log(video.owner);
   if (!video) {
     // 에러 status code를 보내고 에러 template을 render한다.
     return res.status(400).render("404", { pageTitle: "Video not found." });

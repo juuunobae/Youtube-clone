@@ -3,6 +3,7 @@ doctype html
 html 
     head 
         link(link rel="stylesheet", href="https://unpkg.com/mvp.css")
+        link(rel='stylesheet', href='/static/css/styles.css')
         title #{pageTitle} | #{siteName} 
     body 
         header  
@@ -36,3 +37,4 @@ html
 
         //- 따로 만든 footer 파일을 불러와 사용
         include partials/footer
+        script(src="/static/js/main.js") 
