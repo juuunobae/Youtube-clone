@@ -11,7 +11,7 @@ export const home = async (req, res) => {
   // 데이터베이스에서 데이터를 불러올 때 생길 에러에 대비해 try/catch문 사용
   try {
     // 데이터베이스에서 모든 비디오를 불러와 videos 변수에 저장
-    const videos = await Video.find({}).sort({ createdAt: "desc" }); // sort를 이용해 내림차순으로 정렬한 것\
+    const videos = await Video.find({}).sort({ createdAt: "desc" }).populate("owner"); // sort를 이용해 내림차순으로 정렬한 것\
 
     // 불러온 비디오들을 template 변수로 넘겨주고 render
     return res.render("home", { pageTitle: "Home", videos });

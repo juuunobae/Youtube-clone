@@ -1,0 +1,25 @@
+header  
+    a(href='/').header__logo
+        i.fab.fa-youtube
+    //- 네비게이션
+    nav 
+        ul 
+            li  
+                a(href='/search')
+                    i.fas.fa-search
+            if(loggedIn)
+                //- loggedIn이 true 일 때 = 로그인 상태일 때  실행
+                li 
+                    a(href='/videos/upload') Upolad Video
+                li
+                    a(href=`/users/${loggedInUser._id}`) My profile
+                li 
+                    a(href='/users/edit') Edit Profile
+                li 
+                    a(href='/users/logout') Logout
+            else
+                //- 로그인 상태가 아닐 때 실행
+                li 
+                    a(href='/login') Login
+                li 
+                    a(href='/join').header__btn Join
