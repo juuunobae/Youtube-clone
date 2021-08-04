@@ -11,12 +11,16 @@ header
                 //- loggedIn이 true 일 때 = 로그인 상태일 때  실행
                 li 
                     a(href='/videos/upload') Upolad Video
-                li
-                    a(href=`/users/${loggedInUser._id}`) My profile
                 li 
                     a(href='/users/edit') Edit Profile
                 li 
                     a(href='/users/logout') Logout
+                li
+                    a(href=`/users/${loggedInUser._id}`) 
+                        if loggedInUser.avatarUrl === ''
+                            span 😄
+                        else 
+                            img(src=loggedInUser.avatarUrl).header__avatar
             else
                 //- 로그인 상태가 아닐 때 실행
                 li 

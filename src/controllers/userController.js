@@ -169,7 +169,7 @@ export const finishLoginGithub = async (req, res) => {
     if (!user) {
       // User model을 새로 생성해준다.
       user = await User.create({
-        avatarUrl: userData.avatar_url,
+        avatarUrl: `/${userData.avatar_url}`,
         username: userData.login,
         name: userData.name,
         email: emailObj.email,
@@ -231,7 +231,7 @@ export const postEdit = async (req, res) => {
   const editUser = await User.findByIdAndUpdate(
     _id,
     {
-      avatarUrl: file ? file.path : avatarUrl,
+      avatarUrl: file ? `/${file.path}` : `/${avatarUrl}`,
       name,
       email,
       username,
@@ -245,7 +245,7 @@ export const postEdit = async (req, res) => {
 };
 
 export const getChangePasswored = (req, res) => {
-  return res.render("change-password", { pageTitle: "Change Password" });
+  return res.render("users/change-password", { pageTitle: "Change Password" });
 };
 
 export const postChangePassword = async (req, res) => {
@@ -280,9 +280,18 @@ export const postChangePassword = async (req, res) => {
 
 export const see = async (req, res) => {
   const { id } = req.params;
-  const user = await User.findById(id).populate("videos");
+
+  // populete를 두번 한것이다.
+  // user가 생성한 videos를 populate하고 그 videos를 생성한 owner도 populate한다.
+  const user = await User.findById(id).populate({
+    path: "videos",
+    populate: {
+      path: "owner",
+      model: "User",
+    },
+  });
   if (!user) {
     return res.status(404).render("404", { pageTitle: "User not found" });
   }
-  return res.render("profile", { pageTitle: user.name, user });
+  return res.render("users/profile", { pageTitle: user.name, user });
 };

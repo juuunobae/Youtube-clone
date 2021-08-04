@@ -2,10 +2,11 @@ extends base.pug
 include mixins/video
 
 block content 
-    form.search__form
+    form(method='GET').search__form
         input(placeholder='Search by title', type='text', name='keyword')
-        input(type='submit', value='Search')
-    
+        button 
+            i.fas.fa-search
+            
     div.video-grid
         //- controller에서 받아온 videos배열을 반복문을 사용해 각각의 데이터를 mixin을 사용해 화면에 출력한다.
         each video in videos

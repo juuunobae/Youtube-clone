@@ -1,7 +1,7 @@
 //- home과 search 화면에서 보여지게 될 비디오들의 구조를 정의해놓고 공유할 수 있는 mixin
 mixin videos(video)
     //- mixin의 이름은 videos이고, video는 template(home.put, search,pug)에서 넘겨받은 파라미터이다
-    a(href=`/vidoes/${video.id}`) .video-mixin 
+    a(href=`/videos/${video.id}`).video-mixin 
         .video-mixin__thumb 
         .video-mixin__data
             span.video-mixin__title=video.title

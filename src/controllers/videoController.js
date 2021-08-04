@@ -28,7 +28,6 @@ export const watch = async (req, res) => {
   const video = await Video.findById(id).populate("owner"); // 받아온 id로 그와 일치하는 비디오를 데이터베이스에서 찾아 video 변수에 저장
   // id와 일치하는 video가 없을 때
   // url을 임의로 바꿨을 때
-  console.log(video.owner);
   if (!video) {
     // 에러 status code를 보내고 에러 template을 render한다.
     return res.status(400).render("404", { pageTitle: "Video not found." });
@@ -176,7 +175,7 @@ export const search = async (req, res) => {
         $regex: new RegExp(keyword, "i"),
         // 정규표현식을 사용해서 일치하는 값을 여러 옵션을 찾아낼 수 있다.
       },
-    });
+    }).populate("owner");
   }
   // 찾은 비디오 배열을 template 변수로 넘겨주고 render
   return res.render("search", { pageTitle: `Searching by: ${keyword}`, videos });
