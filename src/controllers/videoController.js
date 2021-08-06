@@ -30,7 +30,7 @@ export const watch = async (req, res) => {
   // url을 임의로 바꿨을 때
   if (!video) {
     // 에러 status code를 보내고 에러 template을 render한다.
-    return res.status(400).render("404", { pageTitle: "Video not found." });
+    return res.status(404).render("404", { pageTitle: "Video not found." });
   }
 
   // 불러온 비디오를 template 변수로 넘겨주고 render
@@ -179,4 +179,15 @@ export const search = async (req, res) => {
   }
   // 찾은 비디오 배열을 template 변수로 넘겨주고 render
   return res.render("search", { pageTitle: `Searching by: ${keyword}`, videos });
+};
+
+export const registerView = async (req, res) => {
+  const { id } = req.params;
+  const video = await Video.findById(id);
+  if (!video) {
+    return res.sendStatus(404);
+  }
+  video.meta.views = video.meta.views + 1;
+  await video.save();
+  return res.sendStatus(200);
 };

@@ -10,6 +10,7 @@ import videoRouter from "./routers/videoRouter";
 
 // locals middelware import
 import { localsMiddleware } from "./middlewares";
+import apiRouter from "./routers/apiRouter";
 
 // express application을 app 변수에 저장
 const app = express();
@@ -44,5 +45,6 @@ app.use("/users", userRouter);
 app.use("/videos", videoRouter);
 app.use("/uploads", express.static("uploads"));
 app.use("/static", express.static("assets"));
+app.use("/api", apiRouter);
 
 export default app;
