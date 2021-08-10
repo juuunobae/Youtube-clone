@@ -40,11 +40,26 @@ app.use(logger);
 app.use(express.urlencoded({ extended: true }));
 
 // Routing
+
+// FFmpeg
+// Uncaught (in promise) ReferenceError: SharedArrayBuffer is not defined
+// 에러 났을 때 해결 미들웨어
+app.use((req, res, next) => {
+  res.header("Cross-Origin-Embedder-Policy", "require-corp");
+  res.header("Cross-Origin-Opener-Policy", "same-origin");
+  next();
+});
+
 app.use("/", rootRouter);
 app.use("/users", userRouter);
 app.use("/videos", videoRouter);
 app.use("/uploads", express.static("uploads"));
-app.use("/static", express.static("assets"));
+app.use(
+  "/static",
+  express.static("assets"),
+  // 404 에러 났을 때 해결 코드
+  express.static("node_modules/@ffmpeg/core/dist")
+);
 app.use("/api", apiRouter);
 
 export default app;

@@ -1,3 +1,6 @@
+import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
+import fetch from "node-fetch";
+
 const startBtn = document.getElementById("startBtn");
 const video = document.getElementById("preview");
 
@@ -5,7 +8,17 @@ let stream;
 let recorder;
 let videoFile;
 
-const handleDownload = () => {
+const handleDownload = async () => {
+  const FFmpeg = createFFmpeg({
+    log: true,
+    corePath: "/static/ffmpeg-core.js",
+    // 404 에러 났을 때 해결 코드
+    // '/express.static에서 추가한 url/ffmpeg-core.js'
+  });
+  await FFmpeg.load();
+  FFmpeg.FS("writeFile", "recording.webm", await fetchFile(videoFile));
+  await FFmpeg.run("-i", "recording.webm", "-r", "60", "output.mp4");
+
   const a = document.createElement("a");
   a.href = videoFile;
   a.download = "MyRecorder.webm";
