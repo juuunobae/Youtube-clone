@@ -1,5 +1,4 @@
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
-import fetch from "node-fetch";
 
 const startBtn = document.getElementById("startBtn");
 const video = document.getElementById("preview");

@@ -31,9 +31,8 @@ app.use(
   })
 );
 
-app.use(localsMiddleware);
-
 // middleware
+app.use(localsMiddleware);
 app.use(logger);
 
 // request.body를 사용하기 위해 데이터 파싱
@@ -53,13 +52,22 @@ app.use((req, res, next) => {
 app.use("/", rootRouter);
 app.use("/users", userRouter);
 app.use("/videos", videoRouter);
+
+// 브라우저에서 uploads로 시작하는 url로 접근을 하면 uploads 폴더로 보내준다.
+// uploads 폴더는 업로드한 비디오들이 저장되어 있는 폴더
 app.use("/uploads", express.static("uploads"));
+
+// static으로 시작하는 url로 접근을 하면 assets 폴더로 보내준다.
+// webpack으로 번들링 된 프론트엔드의 js 파일들이 저장되어있는 곳
+// template에서 불러올 때 사용된다.
 app.use(
   "/static",
   express.static("assets"),
   // 404 에러 났을 때 해결 코드
   express.static("node_modules/@ffmpeg/core/dist")
 );
+
+// video views의 카운트를 추가하는 api를 처리하는 router
 app.use("/api", apiRouter);
 
 export default app;

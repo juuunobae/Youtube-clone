@@ -181,13 +181,16 @@ export const search = async (req, res) => {
   return res.render("search", { pageTitle: `Searching by: ${keyword}`, videos });
 };
 
+// video view 카운트 추가를 위해 프론트엔드에서 요청한 api 처리 controller
 export const registerView = async (req, res) => {
-  const { id } = req.params;
-  const video = await Video.findById(id);
+  const { id } = req.params; // 요청 url에서 id를 얻는다.
+  const video = await Video.findById(id); // id에 해당하는 비디오를 데이터베이스에서 불러온다.
   if (!video) {
+    // 찾은 비디오가 없으면 404 status code를 리턴한다.
     return res.sendStatus(404);
   }
+  // 찾은 비디오의 views를 1 더한다.
   video.meta.views = video.meta.views + 1;
-  await video.save();
-  return res.sendStatus(200);
+  await video.save(); // 수정된 비디오를 저장한다.
+  return res.sendStatus(200); // 성공적인 200 status code를 리턴한다.
 };

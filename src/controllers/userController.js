@@ -228,36 +228,42 @@ export const postEdit = async (req, res) => {
     }
   }
 
+  // session에 저장(현재 login되어 있는 사용자)되어 있는 id에 해당하는 사용자를 데이터베이스에서 불러와 그 사용자의 정보를 수정해준다.
   const editUser = await User.findByIdAndUpdate(
     _id,
     {
-      avatarUrl: file ? `/${file.path}` : `/${avatarUrl}`,
+      avatarUrl: file ? `/${file.path}` : `/${avatarUrl}`, // file이 있으면 file.path(새로운 사진)를 없으면 avatarUrl(원래 사진)을 저장
       name,
       email,
       username,
       location,
     },
-    { new: true }
+    { new: true } // 수정된 객체를 반환한다.
   );
-  req.session.user = editUser;
+  req.session.user = editUser; // 수정된 사용자를 session.user에 저장
 
   return res.redirect("/users/edit");
 };
 
+// change-password get method
 export const getChangePasswored = (req, res) => {
   return res.render("users/change-password", { pageTitle: "Change Password" });
 };
 
+// change-password post method
 export const postChangePassword = async (req, res) => {
   const {
     session: {
       user: { _id, password },
-    },
+    }, // 로그인되어 세션에 저장되어 있는 사용자의  ID와 password
     body: { currentPassword, newPassword, passwordConfirmation },
+    // 사용자가 입력한 현재 password와 변경할 password, 확인할 password
   } = req;
 
+  // 사용자가 입력한 현재 password를 해싱하여 이미 해싱되어 있는 기존 password와 일치하는 지 확인
   const ok = await bcrypt.compare(currentPassword, password);
 
+  // session의 현재 password와 입력한 현재 password가 일치하지 않으면 실행
   if (!ok) {
     return res.status(400).render("change-password", {
       pageTitle: "Change Password",
@@ -265,20 +271,27 @@ export const postChangePassword = async (req, res) => {
     });
   }
 
+  // 변경할 password와 확인할 password가 일치하지 않으면 실행
   if (newPassword !== passwordConfirmation) {
     return res.status(400).render("change-password", {
       pageTitle: "Change Password",
       errorMessage: "The password does not match the confimation",
     });
   }
+
+  // 현재 로그인되어 있는 사용자에게서 얻은 id로 사용자 객체를 데이터베이스에서 불러온다.
   const user = await User.findOne({ _id });
+  // 사용자 객체의 password 값을 변경할 password로 바꿔준다.
   user.password = newPassword;
+  // 사용자 객체를 데이터베이스에 저장해준다.
   await user.save();
+  // 현재 로그인되어 session에 저장되어 있는 사용자 객체의 pssword도 바뀐 password로 바꿔준다.
   req.session.user.password = user.password;
   res.redirect("/users/logout");
 };
 
 export const see = async (req, res) => {
+  // url에서 id값을 가지고 온다.
   const { id } = req.params;
 
   // populete를 두번 한것이다.
@@ -290,6 +303,8 @@ export const see = async (req, res) => {
       model: "User",
     },
   });
+
+  // 찾는 사용자가 없으면 실행
   if (!user) {
     return res.status(404).render("404", { pageTitle: "User not found" });
   }
