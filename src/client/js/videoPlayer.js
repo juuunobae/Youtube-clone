@@ -69,6 +69,7 @@ const handleVolumeChange = (e) => {
   const {
     target: { value },
   } = e; // 이벤트가 실행되면서 받은 파라미터 event 객체에서 변경된 input 태그의 value 값을 불러온다.
+  video.volume = value; // 비디오의 소리를 value와 같게 바꿔준다.
 
   // 볼륨조절을 할 때 비디오가 음소거 상태이면 실행
   if (video.muted) {
@@ -78,12 +79,10 @@ const handleVolumeChange = (e) => {
 
   // 비디오 볼륨이 0이되면 실행
   if (video.volume === 0) {
-    video.muted = true; // 비디오를 음소거 상태로 변경
     muteBtnIcon.classList = "fas fa-volume-mute"; // 비디오 음소거 버튼 아이콘을 변경
   } else {
     // 비디오 볼륨이 0 이상일 때 실행
     volumeValue = value; // 현재 볼륨 크기를 저장하는 전역변수에 value를 저장
-    video.volume = value; // 비디오의 소리를 value와 같게 바꿔준다.
     muteBtnIcon.classList = "fas fa-volume-up"; // 비디오 음소거 버튼 아이콘을 변경
   }
 };
