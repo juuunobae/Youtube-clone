@@ -10,21 +10,45 @@ let videoFile;
 
 // 다운로 버튼을 누르면 실행될 콜백함수
 const handleDownload = async () => {
-  const FFmpeg = createFFmpeg({
+  const ffmpeg = createFFmpeg({
     log: true,
     corePath: "/static/ffmpeg-core.js",
     // 404 에러 났을 때 해결 코드
     // '/express.static에서 추가한 url/ffmpeg-core.js'
   });
-  await FFmpeg.load();
-  FFmpeg.FS("writeFile", "recording.webm", await fetchFile(videoFile));
-  await FFmpeg.run("-i", "recording.webm", "-r", "60", "output.mp4");
+  await ffmpeg.load();
+  ffmpeg.FS("writeFile", "recording.webm", await fetchFile(videoFile));
+  await ffmpeg.run("-i", "recording.webm", "-r", "60", "output.mp4");
+  await ffmpeg.run(
+    "-i",
+    "recording.webm",
+    "-ss",
+    "00:00:01",
+    "-frames:v",
+    "1",
+    "thumbnail.jpg"
+  );
+
+  const mp4File = ffmpeg.FS("readFile", "output.mp4");
+  const thumbFile = ffmpeg.FS("readFile", "thumbnail.jpg");
+
+  const mp4Blob = new Blob([mp4File.buffer], { type: "video/mp4" });
+  const thumbBlob = new Blob([thumbFile.buffer], { type: "image/jpg" });
+
+  const mp4Url = URL.createObjectURL(mp4Blob);
+  const thumbUrl = URL.createObjectURL(thumbBlob);
 
   const a = document.createElement("a"); // a태그를 생성하고 a 변수에 저장
-  a.href = videoFile; // a 태그의 링크를 녹화한 비디오 주소로 설정해준다.
-  a.download = "MyRecorder.webm"; // 링크를 다운로드할 수 있게 해주고, 초기 이름을 지정해준다.
+  a.href = mp4Url; // a 태그의 링크를 녹화한 비디오 주소로 설정해준다.
+  a.download = "MyRecorder.mp4"; // 링크를 다운로드할 수 있게 해주고, 초기 이름을 지정해준다.
   document.body.appendChild(a); // a태그를 body에 추가해준다.
   a.click(); // a의 클릭을 발생시킨다.
+
+  const thumbA = document.createElement("a"); // a태그를 생성하고 a 변수에 저장
+  thumbA.href = thumbUrl; // thumbA 태그의 링크를 녹화한 비디오 주소로 설정해준다.
+  thumbA.download = "thumbnail.jpg"; // 링크를 다운로드할 수 있게 해주고, 초기 이름을 지정해준다.
+  document.body.appendChild(thumbA); // a태그를 body에 추가해준다.
+  thumbA.click(); // a의 클릭을 발생시킨다.
 };
 
 // 녹화 중지 버튼을 누르면 실행될 콜백함수
