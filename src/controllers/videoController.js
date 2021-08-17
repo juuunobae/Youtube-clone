@@ -101,7 +101,7 @@ export const getUpload = (req, res) => {
 // 비디오 생성 post 요청 form 처리
 export const postUpload = async (req, res) => {
   const {
-    file: { path: fileUrl }, // multer에서 넘겨 받은 사용자가 upload한 file의 경로(path)
+    files: { video, thumb }, // multer에서 넘겨 받은 사용자가 upload한 file의 경로(path)
     session: {
       user: { _id }, // 현재 로그인 된 user ID
     },
@@ -113,7 +113,8 @@ export const postUpload = async (req, res) => {
     const newVideo = await Video.create({
       title,
       owner: _id, // 비디오를 생성한 user
-      fileUrl,
+      fileUrl: video[0].path,
+      thumbUrl: thumb[0].path,
       description,
       hashtags: Video.formatHashtags(hashtags), // 직접 만든 static 함수로 hashtags에 '#'붙여주기
     });
