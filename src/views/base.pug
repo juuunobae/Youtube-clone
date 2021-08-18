@@ -1,3 +1,5 @@
+include mixins/message
+
 doctype html 
 //- 모든 페이지의 layout이 되는 template
 html 
@@ -7,13 +9,20 @@ html
         title #{pageTitle} | #{siteName} 
     body
 
+        if messages.error 
+            +messages('error', messages.error)
+        if messages.info 
+            +messages('info', messages.info)
+        if messages.success 
+            +messages('success', messages.success) 
+
         include partials/header 
         
         main
             //- 페이지 마다 다른 화면이 보이게 될 곳
             block content 
 
-        //- 따로 만든 footer 파일을 불러와 사용
+        //- 따로 만든 foote  r 파일을 불러와 사용
         include partials/footer
 
         script(src="/static/js/main.js") 

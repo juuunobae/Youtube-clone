@@ -2,6 +2,7 @@ import express from "express"; // express 모듈 import
 import morgan from "morgan"; // logging 모듈 import
 import session from "express-session"; // session을 처리하기 위한 모듈 import
 import MongoStore from "connect-mongo"; // session을 db에 저장하기 위한 모듈 import
+import flash from "express-flash"; // 사용자에게 메세지를 전달하기 위한 모듈 import
 
 // Router import
 import rootRouter from "./routers/rootRouter";
@@ -20,6 +21,9 @@ const logger = morgan("dev");
 // template 엔진 종류와 template 파일이 저장되어있는 폴더를 알려준다.
 app.set("view engine", "pug");
 app.set("views", process.cwd() + "/src/views");
+
+// flash를 사용하기 위한 미들웨어
+app.use(flash());
 
 // session을 추가 하는 미들웨어
 app.use(

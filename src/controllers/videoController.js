@@ -54,6 +54,7 @@ export const getEdit = async (req, res) => {
   // 비디오를 생성한 user와 현재 로그인 된 user가 같은지 비교
   // 다르다면 비디오를 수정하면 안되기 때문에 홈으로 redirect
   if (String(video.owner) !== String(_id)) {
+    req.flash("error", "Not authorized");
     return res.status(403).redirect("/");
   }
 
@@ -78,6 +79,7 @@ export const postEdit = async (req, res) => {
   // 비디오를 생성한 user와 현재 로그인 된 user가 같은지 비교
   // 다르다면 비디오를 수정하면 안되기 때문에 홈으로 redirect
   if (String(video.owner) !== String(_id)) {
+    req.flash("error", "You are not the owner of the video.");
     return res.status(403).redirect("/");
   }
 

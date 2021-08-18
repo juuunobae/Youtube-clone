@@ -16,6 +16,8 @@ export const protectorMiddleware = (req, res, next) => {
   if (req.session.user) {
     next();
   } else {
+    // 리다이렉트 될 때 사용자에게 보여줄 메시지
+    req.flash("error", "Login in first");
     res.redirect("/");
   }
 };

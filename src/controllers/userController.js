@@ -192,6 +192,7 @@ export const finishLoginGithub = async (req, res) => {
 export const logout = (req, res) => {
   // destroy 메소드로 session을 삭제해준다.
   req.session.destroy();
+  req.flash("info", "Bye Bye");
   return res.redirect("/");
 };
 
@@ -247,6 +248,11 @@ export const postEdit = async (req, res) => {
 
 // change-password get method
 export const getChangePasswored = (req, res) => {
+  // 소셜 로그인 인 사용자는 비밀번호가 없기 때문에 페이지에 접근할 수 없다.
+  if (req.session.user.socialOnly === true) {
+    req.flash("error", "Can't change password");
+    return res.redirect("/");
+  }
   return res.render("users/change-password", { pageTitle: "Change Password" });
 };
 
@@ -287,6 +293,7 @@ export const postChangePassword = async (req, res) => {
   await user.save();
   // 현재 로그인되어 session에 저장되어 있는 사용자 객체의 pssword도 바뀐 password로 바꿔준다.
   req.session.user.password = user.password;
+  req.flash("info", "Password updata");
   res.redirect("/users/logout");
 };
 
