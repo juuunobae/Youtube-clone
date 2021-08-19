@@ -9,9 +9,11 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   password: { type: String },
   location: String,
-  // Video model과 relationship을 추가한 것
-  videos: [{ type: mongoose.Schema.ObjectId, ref: "Video", required: true }],
+  // 다른 model과 relationship을 추가한 것
   // User가 생성한 Video들의 ObjectId를 배열로 저장하기 위해서
+  videos: [{ type: mongoose.Schema.ObjectId, ref: "Video", required: true }],
+  // User가 작성한 Comment들의 ObjectId를 배열로 저장하기 위해서
+  comment: [{ type: mongoose.Schema.ObjectId, ref: "Comment", required: true }],
 });
 
 // user model을 생성하고 비밀번호를 암호화하기 위한 middleware

@@ -4,6 +4,10 @@ import "dotenv/config";
 import "./db";
 // database와 연결이 성공했을 때 인식할 수 있게 Video model import
 import "./models/Video";
+// database와 연결이 성공했을 때 인식할 수 있게 User model import
+import "./models/User";
+// database와 연결이 성공했을 때 인식할 수 있게 Comment model import
+import "./models/Comment";
 // express application의 설정 코드가 있는 server.js를 import 해준다.
 import app from "./server";
 

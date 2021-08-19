@@ -197,3 +197,9 @@ export const registerView = async (req, res) => {
   await video.save(); // 수정된 비디오를 저장한다.
   return res.sendStatus(200); // 성공적인 200 status code를 리턴한다.
 };
+
+export const createComment = (req, res) => {
+  const { params, body } = req;
+  console.log(params, body);
+  return res.end();
+};

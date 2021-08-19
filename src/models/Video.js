@@ -12,9 +12,11 @@ const videoSchema = new mongoose.Schema({
     // 객체도 가능하다.
     views: { type: Number, default: 0, required: true },
   },
-  // User model과 relationship을 추가한 것
-  owner: { type: mongoose.Schema.ObjectId, ref: "User", required: true },
+  // 다른 model과 relationship을 추가한 것
   // Vidoe를 생성한 User의 ObjectId를 저장하기 위해서
+  owner: { type: mongoose.Schema.ObjectId, ref: "User", required: true },
+  // Vidoe에 달린 Comment들의 ObjectId를 배열로 저장하기 위해서
+  comment: [{ type: mongoose.Schema.ObjectId, ref: "Comment", required: true }],
 });
 
 // 사용자에게 입력받은 hashtags를 comma를 기준으로 단어를 나눠 각 단어의 앞에 '#'를 붙여주기 위해 직접 만든 함수
