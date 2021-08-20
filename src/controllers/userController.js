@@ -191,8 +191,8 @@ export const finishLoginGithub = async (req, res) => {
 // 로그아웃 controller
 export const logout = (req, res) => {
   // destroy 메소드로 session을 삭제해준다.
-  req.session.destroy();
   req.flash("info", "Bye Bye");
+  req.session.destroy();
   return res.redirect("/");
 };
 

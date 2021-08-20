@@ -1,5 +1,7 @@
 import Video from "../models/Video";
 import User from "../models/User";
+import Comment from "../models/Comment";
+import { async } from "regenerator-runtime";
 
 // query method, callback function
 // Video.find({}, (error, videos) => {
@@ -25,7 +27,8 @@ export const home = async (req, res) => {
 // 각 비디오들의 상세 페이지
 export const watch = async (req, res) => {
   const { id } = req.params; // 비디오의 id 값을 url에서 받아온다.
-  const video = await Video.findById(id).populate("owner"); // 받아온 id로 그와 일치하는 비디오를 데이터베이스에서 찾아 video 변수에 저장
+  const video = await Video.findById(id).populate("owner").populate("comments"); // 받아온 id로 그와 일치하는 비디오를 데이터베이스에서 찾아 video 변수에 저장
+
   // id와 일치하는 video가 없을 때
   // url을 임의로 바꿨을 때
   if (!video) {
@@ -198,8 +201,51 @@ export const registerView = async (req, res) => {
   return res.sendStatus(200); // 성공적인 200 status code를 리턴한다.
 };
 
-export const createComment = (req, res) => {
-  const { params, body } = req;
-  console.log(params, body);
-  return res.end();
+// 댓글 추가를 위해 프론트엔드에서 요청한 api 처리 controller
+export const createComment = async (req, res) => {
+  const {
+    params: { id },
+    body: { text },
+    session: { user },
+  } = req;
+  const video = await Video.findById(id);
+  if (!video) {
+    return res.sendStatus(404);
+  }
+
+  const comment = await Comment.create({
+    text,
+    owner: user._id,
+    video: id,
+  });
+
+  video.comments.push(comment._id);
+  video.save();
+
+  return res.status(201).json({ newCommentId: comment._id });
+};
+
+// 댓글 삭제를 위해 프론트엔드에서 요청한 api 처리 controller
+export const deleteComment = async (req, res) => {
+  const {
+    params: { id },
+    session: { user },
+  } = req;
+  const comment = await Comment.findById(id).populate("video");
+
+  if (!comment === user._id) {
+    return res.sendStatus(403);
+  }
+
+  await Video.findByIdAndUpdate(
+    comment.video._id,
+    {
+      $pull: { comments: comment._id },
+    },
+    { safe: true }
+  );
+
+  await Comment.findByIdAndDelete(id);
+
+  return res.sendStatus(204);
 };
