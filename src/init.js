@@ -13,7 +13,7 @@ import "./models/Comment";
 import app from "./server";
 
 // server의 port 번호를 변수에 저장
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 // 서버 실행이 성공하면 실행될 콜백함수
 const handleListening = () =>
   console.log(`✅Server listening on port http://localhost:${PORT}`);
