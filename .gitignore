@@ -120,3 +120,4 @@ dist
 package-lock.json
 uploads/
 assets/
+build/
