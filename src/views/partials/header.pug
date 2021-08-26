@@ -20,7 +20,10 @@ header
                         if loggedInUser.avatarUrl === ''
                             span 😄
                         else 
-                            img(src=loggedInUser.avatarUrl).header__avatar
+                            if loggedInUser.socialOnly
+                                img(src=loggedInUser.avatarUrl).header__avatar
+                            else
+                                img(src=`/${loggedInUser.avatarUrl}`).header__avatar
             else
                 //- 로그인 상태가 아닐 때 실행
                 li 
