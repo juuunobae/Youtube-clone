@@ -1,5 +1,15 @@
 // file을 upload 해주기 위해 필요한 미들웨어
 import multer from "multer";
+import multerS3 from "multer-s3";
+import aws from "aws-sdk";
+
+const s3 = new aws.S3({
+  credentials: {
+    accessKeyId: process.env.AWS_ID,
+    secretAccessKey: precess.env.AWS_SECRET,
+    acl: "public-read",
+  },
+});
 
 // 모든 template에서 변수를 사용할 수 있게 해주는 미들웨어
 export const localsMiddleware = (req, res, next) => {
@@ -32,15 +42,22 @@ export const publicMiddleware = (req, res, next) => {
   }
 };
 
+export const multerUploader = multerS3({
+  s3: s3,
+  bucket: "wetubeloader",
+});
+
 // 사용자의 프로필 사진을 업로드 할 때 사용되는 multer
 export const uploadAvatar = multer({
   dest: "uploads/avatars/",
   limits: {
     fileSize: 3000000, // 파일의 최대 크기를 지정해준다.
   },
+  storage: multerUploader,
 });
 
 // 비디오를 업로드 할 때 사용되는 multer
 export const uploadVideo = multer({
   dest: "uploads/videos/",
+  storage: multerUploader,
 });
