@@ -1,6 +1,7 @@
 import User from "../models/User";
 import fetch from "node-fetch";
 import bcrypt from "bcrypt";
+import { token } from "morgan";
 
 // join get method controller
 export const getJoin = (req, res) => {
@@ -127,7 +128,9 @@ export const finishLoginGithub = async (req, res) => {
         Accept: "application/json", // JSON으로 응답받기 위해 headers에 넣어서 요청
       },
     })
-  ).json(); // 응답담은 JSON을 tokenRequest에 저장
+  ).json(); // 응답받은 JSON을 tokenRequest에 저장
+
+  console.log(tokenRequest);
 
   // tokenRequest에 "access_token"가 있으면 실행
   if ("access_token" in tokenRequest) {
@@ -169,7 +172,7 @@ export const finishLoginGithub = async (req, res) => {
     if (!user) {
       // User model을 새로 생성해준다.
       user = await User.create({
-        avatarUrl: `/${userData.avatar_url}`,
+        avatarUrl: userData.avatar_url,
         username: userData.login,
         name: userData.name,
         email: emailObj.email,
