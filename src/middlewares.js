@@ -7,6 +7,7 @@ const s3 = new aws.S3({
   credentials: {
     accessKeyId: process.env.AWS_ID,
     secretAccessKey: process.env.AWS_SECRET,
+    acl: "public-read",
   },
 });
 
@@ -44,7 +45,6 @@ export const publicMiddleware = (req, res, next) => {
 export const multerUploader = multerS3({
   s3: s3,
   bucket: "wetubeloader",
-  acl: "public-read",
 });
 
 // 사용자의 프로필 사진을 업로드 할 때 사용되는 multer

@@ -213,6 +213,8 @@ export const postEdit = async (req, res) => {
     file, // multer에서 넘겨 받은 file 객체
   } = req;
 
+  console.log(file);
+
   // 로그인된 사용자의 기존 email이나 username과 다른 값이 form 요청으로 들어왔을 때 실행
   // 즉, 사용자가 email이나 username을 바꾸려고 할 때 실행된다.
   if (sessionEmail !== email || sessionUsername !== username) {
@@ -235,7 +237,7 @@ export const postEdit = async (req, res) => {
   const editUser = await User.findByIdAndUpdate(
     _id,
     {
-      avatarUrl: file ? `/${file.path}` : `/${avatarUrl}`, // file이 있으면 file.path(새로운 사진)를 없으면 avatarUrl(원래 사진)을 저장
+      avatarUrl: file ? file.location : avatarUrl, // file이 있으면 file.path(새로운 사진)를 없으면 avatarUrl(원래 사진)을 저장
       name,
       email,
       username,
