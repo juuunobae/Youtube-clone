@@ -6,7 +6,7 @@ import aws from "aws-sdk";
 const s3 = new aws.S3({
   credentials: {
     accessKeyId: process.env.AWS_ID,
-    secretAccessKey: precess.env.AWS_SECRET,
+    secretAccessKey: process.env.AWS_SECRET,
     acl: "public-read",
   },
 });
