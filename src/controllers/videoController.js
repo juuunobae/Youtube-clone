@@ -112,8 +112,6 @@ export const postUpload = async (req, res) => {
     },
   } = req;
 
-  console.log(video, thumb);
-
   const { title, description, hashtags } = req.body; // 사용자가 form으로 요청한 데이터
   // model 생성시 생길 에러를 대비해 try/catch문 사용
   try {
