@@ -125,6 +125,8 @@ export const postUpload = async (req, res) => {
       hashtags: Video.formatHashtags(hashtags), // 직접 만든 static 함수로 hashtags에 '#'붙여주기
     });
 
+    console.log(newVideo);
+
     // 현재 로그인 된 유저를 데이터베이스에서 불러와 user에 저장
     const user = await User.findById(_id);
     // User model의 videos 배열 필드에 생성한 비디오 객체 push
