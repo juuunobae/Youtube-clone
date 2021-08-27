@@ -38,10 +38,9 @@ app.use(
 // middleware
 app.use(localsMiddleware);
 app.use(logger);
+
 // FFmpeg
 // Uncaught (in promise) ReferenceError: SharedArrayBuffer is not defined
-// 모든 router의 미들웨어로 설정하면 aws에서 파일을 불러올 때 에러가 발생한다.
-// upload router에만 미들웨어를 추가 해준다.
 // 에러 났을 때 해결 미들웨어
 app.use((req, res, next) => {
   res.header("Cross-Origin-Embedder-Policy", "require-corp");
