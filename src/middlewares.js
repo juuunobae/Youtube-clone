@@ -50,6 +50,7 @@ export const publicMiddleware = (req, res, next) => {
 // upload router에만 미들웨어를 추가 해준다.
 // 에러 났을 때 해결 미들웨어
 export const ffmepegErrorMiddleware = (req, res, next) => {
+  console.log(req);
   res.header("Cross-Origin-Embedder-Policy", "require-corp");
   res.header("Cross-Origin-Opener-Policy", "same-origin");
   next();
