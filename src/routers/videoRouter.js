@@ -27,10 +27,9 @@ videoRouter
   .get(deleteVideo); // localhost:4000/videos/:id/delete
 videoRouter
   .route("/upload")
-  .all(protectorMiddleware)
+  .all(protectorMiddleware, ffmepegErrorMiddleware)
   .get(getUpload)
   .post(
-    ffmepegErrorMiddleware,
     uploadVideo.fields([
       { name: "video", maxCount: 1 },
       { name: "thumb", maxCount: 1 },
