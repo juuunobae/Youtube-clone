@@ -111,7 +111,7 @@ export const postUpload = async (req, res) => {
     },
   } = req;
 
-  const isHeroku = (process.env.NODE_ENV = "production");
+  const isHeroku = process.env.NODE_ENV === "production";
 
   const { title, description, hashtags } = req.body; // 사용자가 form으로 요청한 데이터
   // model 생성시 생길 에러를 대비해 try/catch문 사용
@@ -121,7 +121,7 @@ export const postUpload = async (req, res) => {
       title,
       owner: _id, // 비디오를 생성한 user
       fileUrl: isHeroku ? video[0].location : video[0].path,
-      thumbUrl: isHeroku ? thumb[0].location : thubm[0].path,
+      thumbUrl: isHeroku ? thumb[0].location : thumb[0].path,
       description,
       hashtags: Video.formatHashtags(hashtags), // 직접 만든 static 함수로 hashtags에 '#'붙여주기
     });
@@ -138,7 +138,7 @@ export const postUpload = async (req, res) => {
     return res.redirect("/");
   } catch (error) {
     // try문에서 에러가 났을 때 실행
-
+    console.log(error);
     // error._message의 에러메시지를 변수에 저장
     const errorMessage = error._message;
     // 에러메시지를 tmeplate으로 넘겨주고 render 한다.
