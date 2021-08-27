@@ -30,7 +30,6 @@ videoRouter
   .all(protectorMiddleware)
   .get(getUpload)
   .post(
-    ffmepegErrorMiddleware,
     uploadVideo.fields([
       { name: "video", maxCount: 1 },
       { name: "thumb", maxCount: 1 },

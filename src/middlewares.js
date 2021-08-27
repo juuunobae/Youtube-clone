@@ -10,12 +10,15 @@ const s3 = new aws.S3({
   },
 });
 
+const isHeroku = process.env.NODE_ENV === "production";
+
 // 모든 template에서 변수를 사용할 수 있게 해주는 미들웨어
 export const localsMiddleware = (req, res, next) => {
   // locals를 사용하면 template에서 사용할 수 있는 변수를 만들 수 있다.
   res.locals.siteName = "Wetube";
   res.locals.loggedIn = Boolean(req.session.loggedIn); // 브라우저 session에 저장되어 있는 user의 유무를 불러와 현재 login 된 사용자가 있는 지 확인하는 변수 = login 되어 있으면 true
   res.locals.loggedInUser = req.session.user || {}; // 브라우저 session에 저장되어 었는 사용자 객체를 불러와 저장하는 변수, 없으면 빈객체를 저장한다.
+  res.locals.isHeroku = isHeroku;
   next();
 };
 
@@ -52,9 +55,15 @@ export const ffmepegErrorMiddleware = (req, res, next) => {
   next();
 };
 
-const multerUploader = multerS3({
+const s3AvatarUploader = multerS3({
   s3: s3,
-  bucket: "wetubeloader",
+  bucket: "wetubeloader/images",
+  acl: "public-read",
+});
+
+const s3VideoUploader = multerS3({
+  s3: s3,
+  bucket: "wetubeloader/videos",
   acl: "public-read",
 });
 
@@ -64,11 +73,11 @@ export const uploadAvatar = multer({
   limits: {
     fileSize: 3000000, // 파일의 최대 크기를 지정해준다.
   },
-  storage: multerUploader,
+  storage: isHeroku ? s3AvatarUploader : undefined,
 });
 
 // 비디오를 업로드 할 때 사용되는 multer
 export const uploadVideo = multer({
   dest: "uploads/videos/",
-  storage: multerUploader,
+  storage: isHeroku ? s3VideoUploader : undefined,
 });

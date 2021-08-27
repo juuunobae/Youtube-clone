@@ -112,6 +112,8 @@ export const postUpload = async (req, res) => {
     },
   } = req;
 
+  const isHeroku = (process.env.NODE_ENV = "production");
+
   const { title, description, hashtags } = req.body; // 사용자가 form으로 요청한 데이터
   // model 생성시 생길 에러를 대비해 try/catch문 사용
   try {
@@ -119,8 +121,8 @@ export const postUpload = async (req, res) => {
     const newVideo = await Video.create({
       title,
       owner: _id, // 비디오를 생성한 user
-      fileUrl: video[0].location,
-      thumbUrl: thumb[0].location,
+      fileUrl: isHeroku ? video[0].location : video[0].path,
+      thumbUrl: isHeroku ? thumb[0].location : thubm[0].path,
       description,
       hashtags: Video.formatHashtags(hashtags), // 직접 만든 static 함수로 hashtags에 '#'붙여주기
     });
