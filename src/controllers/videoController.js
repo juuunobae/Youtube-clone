@@ -1,7 +1,6 @@
 import Video from "../models/Video";
 import User from "../models/User";
 import Comment from "../models/Comment";
-import { async } from "regenerator-runtime";
 
 // query method, callback function
 // Video.find({}, (error, videos) => {
@@ -126,8 +125,6 @@ export const postUpload = async (req, res) => {
       description,
       hashtags: Video.formatHashtags(hashtags), // 직접 만든 static 함수로 hashtags에 '#'붙여주기
     });
-
-    console.log(newVideo);
 
     // 현재 로그인 된 유저를 데이터베이스에서 불러와 user에 저장
     const user = await User.findById(_id);

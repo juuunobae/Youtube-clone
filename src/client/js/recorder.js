@@ -1,7 +1,4 @@
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
-if (!crossOriginIsolated) {
-  SharedArrayBuffer = ArrayBuffer;
-}
 
 // 필요한 html 태그들을 모두 불러온다.
 const actionBtn = document.getElementById("actionBtn"); // 녹화 시작 버튼 태그
