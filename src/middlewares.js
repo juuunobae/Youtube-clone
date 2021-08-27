@@ -41,6 +41,17 @@ export const publicMiddleware = (req, res, next) => {
   }
 };
 
+// FFmpeg
+// Uncaught (in promise) ReferenceError: SharedArrayBuffer is not defined
+// 모든 router의 미들웨어로 설정하면 aws에서 파일을 불러올 때 에러가 발생한다.
+// upload router에만 미들웨어를 추가 해준다.
+// 에러 났을 때 해결 미들웨어
+export const ffmepegErrorMiddleware = (req, res, next) => {
+  res.header("Cross-Origin-Embedder-Policy", "require-corp");
+  res.header("Cross-Origin-Opener-Policy", "same-origin");
+  next();
+};
+
 const multerUploader = multerS3({
   s3: s3,
   bucket: "wetubeloader",

@@ -7,7 +7,11 @@ import {
   postUpload,
   deleteVideo,
 } from "../controllers/videoController";
-import { protectorMiddleware, uploadVideo } from "../middlewares";
+import {
+  ffmepegErrorMiddleware,
+  protectorMiddleware,
+  uploadVideo,
+} from "../middlewares";
 
 const videoRouter = express.Router();
 
@@ -23,7 +27,7 @@ videoRouter
   .get(deleteVideo); // localhost:4000/videos/:id/delete
 videoRouter
   .route("/upload")
-  .all(protectorMiddleware)
+  .all(protectorMiddleware, ffmepegErrorMiddleware)
   .get(getUpload)
   .post(
     uploadVideo.fields([
