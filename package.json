@@ -21,8 +21,8 @@
   },
   "homepage": "https://github.com/juuunobae/Youtube-clone#readme",
   "dependencies": {
-    "@ffmpeg/core": "^0.10.0",
-    "@ffmpeg/ffmpeg": "^0.10.1",
+    "@ffmpeg/core": "^0.8.5",
+    "@ffmpeg/ffmpeg": "^0.9.7",
     "aws-sdk": "^2.976.0",
     "bcrypt": "^5.0.1",
     "connect-mongo": "^4.4.1",

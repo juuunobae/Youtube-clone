@@ -7,7 +7,11 @@ import {
   postUpload,
   deleteVideo,
 } from "../controllers/videoController";
-import { protectorMiddleware, uploadVideo } from "../middlewares";
+import {
+  ffmepegErrorMiddleware,
+  protectorMiddleware,
+  uploadVideo,
+} from "../middlewares";
 
 const videoRouter = express.Router();
 
@@ -26,6 +30,7 @@ videoRouter
   .all(protectorMiddleware)
   .get(getUpload)
   .post(
+    ffmepegErrorMiddleware,
     uploadVideo.fields([
       { name: "video", maxCount: 1 },
       { name: "thumb", maxCount: 1 },
