@@ -2,7 +2,7 @@
 mixin videos(video)
     //- mixin의 이름은 videos이고, video는 template(home.put, search,pug)에서 넘겨받은 파라미터이다
     a(href=`/videos/${video.id}`).video-mixin 
-        .video-mixin__thumb(style=`background-image:url(${video.thumbUrl}, crossorigin);background-size:corver;background-position:center`)
+        .video-mixin__thumb(style=`background-image:url(${video.thumbUrl});background-size:corver;background-position:center`)
         .video-mixin__data
             span.video-mixin__title=video.title
             .video-mixin__meta
