@@ -17,6 +17,9 @@ const files = {
 
 // 반복되는 파일 다운로드 코드를 함수로 만들어 관리
 const downloadFile = (fileUrl, fileName) => {
+  if (!crossOriginIsolated) {
+    SharedArrayBuffer = ArrayBuffer;
+  }
   const a = document.createElement("a"); // a태그를 생성하고 a 변수에 저장
   a.href = fileUrl; // a 태그의 링크를 다운로드할 파일의 주소로 설정해준다.
   a.download = fileName; // 링크를 다운로드할 수 있게 해주고, 초기 이름을 지정해준다.

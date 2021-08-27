@@ -7,11 +7,7 @@ import {
   postUpload,
   deleteVideo,
 } from "../controllers/videoController";
-import {
-  ffmepegErrorMiddleware,
-  protectorMiddleware,
-  uploadVideo,
-} from "../middlewares";
+import { protectorMiddleware, uploadVideo } from "../middlewares";
 
 const videoRouter = express.Router();
 
